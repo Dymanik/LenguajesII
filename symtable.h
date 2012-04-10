@@ -1,53 +1,35 @@
 #ifndef SYMTABLE
 #include <cstdio>
-#include <hash_map>
+#include <unordered_map>
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <vector>
 #include <list>
 
 
-using namespace __gnu_cxx;
 using namespace std;
-class tuple{
-    public:
-         string id;
-         int scope;
-    tuple(string id,int scope):id(id),scope(scope){}
-    bool operator==(const tuple a) const{
-        return id==a.id && scope==a.scope;
-    }
-	/*tuple operator=(const tuple& a){
-		return tuple(a.id,a.scope);
-	}*/
-	
+class Tuple{
+	public:
+		string id;
+		int scope;
+		Tuple(string id,int scope):id(id),scope(scope){}
+		bool operator==(const Tuple a) const{
+			return id==a.id && scope==a.scope;
+		}
+		/*tuple operator=(const tuple& a){
+		  return tuple(a.id,a.scope);
+		  }*/
+
 };
 
-namespace __gnu_cxx{
-    template<> class hash<tuple>{
-        public:
-            size_t operator()(const tuple &s) const { 
-                int i;
-                int sum=0;
-                for(i=0; i<s.id.size(); i++){
-                    sum=sum+s.id[i]*(int)(pow(31,s.id.size()-i+1));
-                }
-               // cout << sum+s.scope << endl;
-                return sum+s.scope;
-            }
-    };
-
-    template<> class hash<string>{
-        public:
-            size_t operator()(const string &s) const { 
-                int i;
-                int sum=0;
-                for(i=0; i<s.size(); i++){
-                    sum=sum+s[i]*(int)(pow(31,s.size()-i+1));
-                }
-                return sum;
-            }
-    };
+namespace std{
+	template<> class hash<Tuple>{
+		public:
+			size_t operator()(const Tuple &s) const { 
+				return hash<string>()(s.id)+s.scope;
+			}
+	};
 };
 
 class TElement {
@@ -86,13 +68,37 @@ class Field{
 };
 
 
+class TInteger: public TType{
+	public:
+		TType():TType("integer",4,true,true){};
+}
+
+class TBool: public TType{
+	public:
+		TType():TType("bool",1,true){};
+}
+class IFloat: public TType{
+	public:
+		TType():TType("float",4,true,true){};
+}
+
+class TChar: public TType{
+	public:
+		TType():TType("char",1,true,true){};
+}
+
+class Integer: public TType{
+	public:
+		TType():TType("integer",4,true,true){};
+}
+
 class TStructured: public TType{
 	public:
-		hash_map<string,TType*> fields;
+		unordered_map<string,TType*> fields;
 		bool uni;
 		TStructured(string name,int size,bool uni=false):TType(name,size,true,false,true){}
 		TType* accessType(string name){
-			hash_map<string,TType*>::iterator it;
+			unordered_map<string,TType*>::iterator it;
 			it=fields.find(name);
 			if(it==fields.end())return NULL;
 			return it->second;
@@ -153,34 +159,34 @@ class TString: public TType{
 };
 
 class Symtable {
-	hash_map<tuple,TElement*> table;
-	hash_map<string,TFunc*> funtable;
+	unordered_map<Tuple,TElement*> table;
+	unordered_map<string,TFunc*> funtable;
 	list<int> scopeStack;
 	int scope;
 	int nextscope;
 	public:
 		Symtable():scope(0),nextscope(1){
-			table[tuple(string("char"),scope)]=new TType("char",sizeof(char),true,true);
-			table[tuple(string("integer"),scope)]=new TType("integer",sizeof(int),true,true);
-			table[tuple(string("float"),scope)]=new TType("float",sizeof(float),true,true);
-			table[tuple(string("boolean"),scope)]=new TType("boolean",sizeof(bool),true);
-			table[tuple(string("void"),scope)]=new TType("void",0,true);
-            table[tuple(string("string"),scope)]=new TString(0);
+			table[Tuple(string("char"),scope)]=new TType("char",sizeof(char),true,true);
+			table[Tuple(string("integer"),scope)]=new TType("integer",sizeof(int),true,true);
+			table[Tuple(string("float"),scope)]=new TType("float",sizeof(float),true,true);
+			table[Tuple(string("boolean"),scope)]=new TType("boolean",sizeof(bool),true);
+			table[Tuple(string("void"),scope)]=new TType("void",0,true);
+            table[Tuple(string("string"),scope)]=new TString(0);
 		}
 		
 		int insertType(string& name,TType* type){
-			table[tuple(name,0)]=type;
+			table[Tuple(name,0)]=type;
 		}
 
 		int insert(string& name,TElement* elem){
 #ifdef DEBUG
 			cerr<<"inserted "<<name<<scope<<endl;
 #endif
-			table[tuple(name,scope)]=elem;
+			table[Tuple(name,scope)]=elem;
 		}
 
 		bool insertfun(TFunc* fun){
-			hash_map<string,TFunc*>::iterator it;
+			unordered_map<string,TFunc*>::iterator it;
             string key = string(fun->name);
             int i;
             for(i=0; i<fun->args->size(); i++){
@@ -204,12 +210,12 @@ class Symtable {
 		}
 
         int insertnextscope(string& name, TElement* elem){
-            table[tuple(name,scope+1)]=elem;
+            table[Tuple(name,scope+1)]=elem;
         }
 
 		TElement* lookup(const string name){
-			tuple t(name,scope);
-			hash_map<tuple,TElement*>::iterator it;
+			Tuple t(name,scope);
+			unordered_map<Tuple,TElement*>::iterator it;
 #ifdef DEBUG
 			cerr<<"searching "<<name <<" "<<scope<<endl;
 #endif
@@ -220,7 +226,7 @@ class Symtable {
 #ifdef DEBUG
 					cerr<<"searching "<<name << " "<<*lit<<endl;
 #endif
-					t=tuple(name,*lit);
+					t=Tuple(name,*lit);
 					it=table.find(t);
 					if(!(it==table.end())){
 						break;
@@ -237,8 +243,8 @@ class Symtable {
 		}
 		
         TElement* lookupScope(const string name){
-			tuple t(name,scope);
-			hash_map<tuple,TElement*>::iterator it;
+			Tuple t(name,scope);
+			unordered_map<Tuple,TElement*>::iterator it;
 #ifdef DEBUG
 			cerr<<"searching "<<name << " " <<scope<<endl;
 #endif
@@ -254,7 +260,7 @@ class Symtable {
 		}
 
 		TFunc* lookupFunc(const string name, const std::vector<TType*> args){
-			hash_map<string,TFunc*>::iterator it;
+			unordered_map<string,TFunc*>::iterator it;
             string key = string(name);
             int i;
             for(i=0; i<args.size(); i++){
@@ -272,8 +278,8 @@ class Symtable {
 		}
 
         TType* lookupType(const string name){
-            tuple t(name,0);
-            hash_map<tuple,TElement*>::iterator it;
+            Tuple t(name,0);
+            unordered_map<Tuple,TElement*>::iterator it;
             it=table.find(t);
             if(it==table.end()){
                 return NULL;
