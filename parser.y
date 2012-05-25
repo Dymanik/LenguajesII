@@ -1,8 +1,8 @@
 %{
-#include "ast.h"
+#include "ast.cpp"
 #include <cstdio>
 #include <cstdarg>
-#include "symtable.h"
+#include "symtable.cpp"
 #include <stdio.h>
 extern int yylex (void);
 //void yyerror (char const *a){printf("ERROR: %s\n",a);};
@@ -56,7 +56,7 @@ Symtable Table;
 %token	<string> ID
 
 /* Type of node our nonterminal represent */
-%type	<expr>	expr fun_call
+%type	<expr>	expr fun_call bool_expr arit_expr
 %type 	<lrexpr> lrexpr
 %type	<ident>	ident
 %type	<varvec> fun_decl_args var_decls fun_decl_args_list
@@ -181,7 +181,7 @@ str_decl    : STRIN cons_arr ident {
                           @3.first_line<<",c"<<@3.first_column<<endl;
                   flagerror=1;
                                     }
-| STRIN cons_arr ident '=' STR {$$ = new NArrayDeclaration(*$3,*(new NIdentifier(*(new std::string("char")))),*$2,new NArray(*$5));
+			| STRIN cons_arr ident '=' STR {$$ = new NArrayDeclaration(*$3,*(new NIdentifier(*(new std::string("char")))),*$2,new NArray(*$5));
                         if($$->addSymtable(Table)==1)
                             cerr<<"Array `"<< $$->id.name<< "`. l"
                                 <<@3.first_line<<",c"<<@3.first_column<<"-l"<<
@@ -260,27 +260,11 @@ ident		: ID {$$ = new NIdentifier(*$1);}
 
 
 expr		: lrexpr{$$ = $<expr>1;}
-			| INT	{$$ = new NInteger($1);}
-			| FLOAT	{$$ = new NDouble($1);}
 			| STR 	{$$ = new NString(*$1);}
 			| CHAR	{$$ = new NChar($1);}	
-			| TRUE	{$$ = new NBool(true);}
-			| FALSE	{$$ = new NBool(false);}
-			| fun_call  
-			| expr '+' expr {$$=new NBinaryOperator($1,"+",$3);}
-			| expr '-' expr {$$=new NBinaryOperator($1,"-",$3);}
-			| expr '/' expr {$$=new NBinaryOperator($1,"/",$3);}
-			| expr '*' expr {$$=new NBinaryOperator($1,"*",$3);}
-			| expr AND expr {$$=new NBinaryOperator($1,"and",$3);}
-			| expr OR expr	{$$=new NBinaryOperator($1,"or",$3);}
-			| expr '<' expr {$$=new NBinaryOperator($1,"<",$3);}
-			| expr '>' expr {$$=new NBinaryOperator($1,">",$3);}
-			| expr GEQ expr {$$=new NBinaryOperator($1,">=",$3);}
-			| expr LEQ expr {$$=new NBinaryOperator($1,"<=",$3);}
-			| expr NEQ expr {$$=new NBinaryOperator($1,"!=",$3);}
-			| expr EQ expr {$$=new NBinaryOperator($1,"==",$3);}
-			| '-' expr %prec NEG {$$=new NUnaryOperator("-",$2);}
-			| '!' expr %prec NOT {$$=new NUnaryOperator("not",$2);}
+			| fun_call 
+			| bool_expr		
+			| arit_expr
 			| '(' expr ')'	{$$=$2;}
             /*| error ')' {@$.first_column = @1.first_column;
                             @$.first_line = @1.first_line;
@@ -290,6 +274,29 @@ expr		: lrexpr{$$ = $<expr>1;}
                                         @1.first_line, @1.first_column,
                                         @2.last_line, @2.last_column);
                             }*/
+			;
+
+arit_expr	: expr '+' expr {$$=new NBinaryOperator($1,"+",$3);}
+			| INT	{$$ = new NInteger($1);}
+			| FLOAT	{$$ = new NDouble($1);}
+			| expr '-' expr {$$=new NBinaryOperator($1,"-",$3);}
+			| expr '/' expr {$$=new NBinaryOperator($1,"/",$3);}
+			| expr '*' expr {$$=new NBinaryOperator($1,"*",$3);}
+			| '-' expr %prec NEG {$$=new NUnaryOperator("-",$2);}
+			;
+
+bool_expr	: expr AND expr {$$=new NBinaryOperator($1,"and",$3);}
+			| TRUE	{$$ = new NBool(true);}
+			| FALSE	{$$ = new NBool(false);}
+			| expr OR expr	{$$=new NBinaryOperator($1,"or",$3);}
+			| expr '<' expr {$$=new NBinaryOperator($1,"<",$3);}
+			| expr '>' expr {$$=new NBinaryOperator($1,">",$3);}
+			| expr GEQ expr {$$=new NBinaryOperator($1,">=",$3);}
+			| expr LEQ expr {$$=new NBinaryOperator($1,"<=",$3);}
+			| expr NEQ expr {$$=new NBinaryOperator($1,"!=",$3);}
+			| expr EQ expr {$$=new NBinaryOperator($1,"==",$3);}
+			| '!' expr %prec NOT {$$=new NUnaryOperator("not",$2);}
+
 			;
 
 lrexpr		: ident	{ if(Table.lookup($1->name)!=NULL){
@@ -320,7 +327,7 @@ arr_lst     : cons_arr {$$ = $1;}
             ;
 	
 expr_lst    : expr {$$=new ExpressionList();$$->push_back($1);}
-			| expr_lst ',' expr {$$->push_back($3);}
+			| expr_lst ',' expr {$1->push_back($3);}
             | expr_lst error expr {}
             ;
 

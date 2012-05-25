@@ -1,6 +1,6 @@
 #include <vector>
 #include <iostream>
-#include "symtable.h"
+#include "symtable.cpp"
 
 class NStatement;
 class NExpression;
@@ -24,7 +24,10 @@ class Node{
 };
 
 class NExpression : public Node {
-
+	public:
+	TType* type;
+	bool constant;
+	NExpression(bool constant=true):type(NULL),constant(constant){}
 };
 
 class NLRExpression : public NExpression{
@@ -51,6 +54,7 @@ class NExpressionStatement : public NStatement {
 		}
 };
 
+
 class NInteger : public NExpression {
 	public :
 		int value;
@@ -59,7 +63,8 @@ class NInteger : public NExpression {
 #ifdef DEBUG
 			cerr<<"TypeCHK:integer "<<value<<endl;
 #endif
-			return (TType*)t.lookupType("integer");
+			type=(TType*)t.lookupType("integer");
+			return type;
 		}
 		void printTree(std::ostream& os, int depth =0){
 			os<<string(depth,' ')<<"NInteger: value="<<value<<endl;
@@ -167,7 +172,7 @@ class NArray : public NExpression {
 #ifdef DEBUG
                 cout << "cons array type " << elem->name << endl;
 #endif
-                return elem;
+                return new TArray(*elem,values.size());
             }
         
         }
@@ -458,7 +463,7 @@ class NVariableDeclaration : public NVarrayDeclaration {
 		void printTree(std::ostream& os, int depth =0){
 			os<<string(depth,' ')<<"NVarrayDecl: id= "<< id.name<< " type: "<<type.name<<endl;
 			if(assigment!=NULL) {
-				os<<"initialization ="<<endl;
+				os<<string(depth,' ')<<"initialization ="<<endl;
 				assigment->printTree(os,depth+1);
 			}
 		}
@@ -499,7 +504,7 @@ class NFunctionDeclaration : public NStatement {
             bool err=false;
             TType* ret = t.lookupType(type.name);
             if(ret==NULL){
-                cerr << "Error in function declaration " << id.name << " type " << ret->name << " does not exist" << endl;
+                cerr << "Error in function declaration " << id.name << " type "<< type.name << " does not exist" << endl;
                 err=true;
             }
             std::vector<TType*>* arguments = new vector<TType*>();
@@ -525,11 +530,11 @@ class NFunctionDeclaration : public NStatement {
 		
 		void printTree(std::ostream& os, int depth =0){
 			os<<string(depth,' ')<<"NFunctionDecl: id= "<< id.name<<"type="<<type.name<<endl;
-			os<<string(depth,' ')<<"args= ("<< id.name<<endl;
+			os<<string(depth,' ')<<"args= ("<<endl;
 			for(int i=0;i<args.size();i++){
 				args[i]->printTree(os,depth+1);   
 			}
-			os<<string(depth,' ')<<")"<< id.name<<endl;
+			os<<string(depth,' ')<<")"<<endl;
 			if(block!=NULL) {
 				block->printTree(os,depth+1);
 			}

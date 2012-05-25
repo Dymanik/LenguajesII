@@ -1,9 +1,9 @@
 %{
-#include "ast.h"
+#include "ast.cpp"
 #include "parser.hpp"
 #include <math.h>
 #include <string>
-#define TOKEN(t) (yylval.token = t)
+#include <limits>
 #define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
 #define SAVE_STRING yylval.string = new std::string(string_buf)
 #define MAX_STR_CONST 1024
@@ -20,7 +20,6 @@ extern "C" int yywrap() { }
 %}
      
 DIGIT    [0-9]
-ID       [a-zA-Z][a-zA-Z0-9_]*
 DOUBLE	 {DIGIT}+\.{DIGIT}+([eE][+-]?{DIGIT}+)?
 
 %x COMMENT
@@ -38,9 +37,9 @@ DOUBLE	 {DIGIT}+\.{DIGIT}+([eE][+-]?{DIGIT}+)?
 	"//"				BEGIN(COMMENTL);
     "#"                 BEGIN(CHARC);
 
-	{DIGIT}+			{if((yylval.integer=strtol(yytext,NULL,0))<=-2147483648){
+	{DIGIT}+			{if((yylval.integer=strtol(yytext,NULL,0))<std::numeric_limits<int>::min()){
                             fprintf(stderr,"Warning: Underflow detected in line %d\n", yylineno);
-                         }else if((yylval.integer=strtol(yytext,NULL,0))>=2147483647){
+                         }else if((yylval.integer=strtol(yytext,NULL,0))>std::numeric_limits<int>::max()){
                                 fprintf(stderr,"Warning: Overflow detected in line %d\n",yylineno);}
                         return INT;}
 
@@ -98,13 +97,6 @@ DOUBLE	 {DIGIT}+\.{DIGIT}+([eE][+-]?{DIGIT}+)?
 
 	"not"				{return '!';}
 
-	/*
-	"integer"			{return INT;}
-	"float"				{return FLOAT;}
-	"character"			{return CHAR;}
-	"boolean"			{return BOOL;}
-	"void"				{return VOID;}
-*/	
 	"string"			{return STRIN;}
 	"register"			{return REGISTER;}
 	"union"				{return UNION;}
@@ -112,7 +104,8 @@ DOUBLE	 {DIGIT}+\.{DIGIT}+([eE][+-]?{DIGIT}+)?
 
 	/*"function"			{return FUN;}*/
 
-	{ID}				{SAVE_TOKEN; return ID;}
+	[A-Z][A-Za-z0-9_]*	{SAVE_TOKEN; return TYPEID;}
+	[A-Za-z][A-Za-z0-9_]* {SAVE_TOKEN; return ID;}
 
 	\n				    {yylineno++;
                             yycolumn=1;}

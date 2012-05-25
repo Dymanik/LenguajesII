@@ -1,27 +1,25 @@
-LEX    = flex
-BISON  = bison
-BFLAGS = --output=parser.cpp
 
-comp:	parser.cpp lexer.cpp main.cpp ast.o symtable.o
-		g++ $^ -o $@ -lm -ly -std=c++0x
+GCC=g++
+LEX=flex
+BISON=bison
 
-deb: 
-		bison -o parser.cpp -vtdy parser.y
-		flex -o lexer.cpp  lexer.l parser.hpp
-		g++ parser.cpp lexer.cpp main.cpp ast.h symtable.h -o comp -lm -ly -Wno-deprecated -ggdb -DDEBUG
+CFLAGS=-std=c++0x
+FILES = blahsymtable\
+		typechk\
+		printast\
+		blahlog
 
-parser.cpp:	parser.y
-		bison -o $@ -dy $^
+blahc: blahc.cpp blahparser.cpp blahlexer.cpp ${FILES:%=%.o}
+	g++ $^ -o $@ ${CFLAGS} :w
 
-parser.hpp : parser.cpp
+blahparser.cpp: blahparser.y
+	${BISON} -dy -o $@ $^
 
-symtable.o: symtable.cpp
-	g++ $^ -c 
-ast.o: ast.cpp
-	g++ $^ -c 
+blahlexer.cpp: blahlexer.l
+	${LEX} -o $@ $^
 
-lexer.cpp:	lexer.l parser.hpp
-		flex -o $@  $^ 
+%.o: %.cpp
+	g++ $^ -c ${CFLAGS}
 
 clean:
-		rm comp parser.hpp lexer.cpp parser.cpp
+		rm  blahparser.hpp blahlexer.cpp blahparser.cpp *.o

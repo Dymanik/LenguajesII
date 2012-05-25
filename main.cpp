@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdio>
 #include <vector>
-#include "ast.h"
-#include "symtable.h"
+#include "ast.cpp"
+#include "symtable.cpp"
 
 extern int yyparse();
 using namespace std;
@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 			Table.resetScope();
 			cout << ProgramAST->typeChk(Table)<< endl;
  	      	cout << "Type Check Finished" << endl;
+			ProgramAST->printTree(cout);
 		}else{
             cout << "flagerror" <<endl;
         }

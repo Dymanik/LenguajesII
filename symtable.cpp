@@ -70,27 +70,24 @@ class Field{
 
 class TInteger: public TType{
 	public:
-		TType():TType("integer",4,true,true){};
-}
+		TInteger():TType("integer",4,true,true){};
+};
 
 class TBool: public TType{
 	public:
-		TType():TType("bool",1,true){};
-}
-class IFloat: public TType{
+		TBool():TType("bool",1,true){};
+};
+class TFloat: public TType{
 	public:
-		TType():TType("float",4,true,true){};
-}
+		TFloat():TType("float",4,true,true){};
+};
+
 
 class TChar: public TType{
 	public:
-		TType():TType("char",1,true,true){};
-}
+		TChar():TType("char",1,true,trueseiken densetsu 3){};
+};
 
-class Integer: public TType{
-	public:
-		TType():TType("integer",4,true,true){};
-}
 
 class TStructured: public TType{
 	public:
@@ -122,6 +119,10 @@ class TUnion: public TStructured{
 		}
 };
 
+class TUndef: public TType{
+	public:
+		TUndef():TType("Undef",0,true){};
+};
 
 class TVar: public TElement{
 	public:
