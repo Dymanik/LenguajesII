@@ -1,50 +1,49 @@
 
-integer s is 2.
-char d is #$.
-boolean b is true.
-float a is 5.6.
+Integer s is 2.
+Char d is #$.
+Boolean b is true.
+Float a is 5.6.
 
-arrayof [10] char z.
-arrayof [10,20,35] char k.
-arrayof [3] boolean bo is [true,false,true].
-arrayof [2,2] boolean asd = [[true,false],[true,true]].
-//arrayof [3] boolean asdf = [true,1,true].
-//arrayof [true] boolean asdf = [true].
+Arrayof [10] Char z.
+Arrayof [10,20,35] Char k.
+Arrayof [3] Boolean bo is [true,false,true].
+Arrayof [2,2] Boolean asd = [[true,false],[true,true]].
+//arrayof [3] Boolean asdf = [true,1,true].
+//arrayof [true] Boolean asdf = [true].
 
 
 register ASDF{
-	integer a,
-	float c
+	Integer a,
+	Float c
 }
 
-integer e is s.
+Integer e is s.
 
 register ASD{
-	integer a
+	Integer a
 }
 
-boolean prueba(integer a, char z){
+Boolean prueba(Integer a, Char z){
     return true.
 }
 
-boolean prueba(){
+Boolean prueba(){
     return false.
 }
 
 
-integer main(){
+Integer main(){
 
-    boolean y = prueba(1,#t).
+    Boolean y = prueba(1,#t).
     ASDF a.
     b[#t] is b.
     b is b[1].
-    string [2] a is "bl".
 	//integer a.
-	integer x.
+	Integer x.
 	for a from 2 to 10 {
 		x=x.
 	}
-	integer s is a->a.
+	Integer s is a->a.
 	s=a->a.
 	s=a->c.
 	return 0 .

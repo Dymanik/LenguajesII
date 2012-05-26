@@ -1,6 +1,5 @@
 #include "blahast.h"
-#include "blahlog.h"
-
+extern Log log;
 
 TType* NInteger::typeChk(Symtable t,TType* exp){
 	return type;
@@ -26,11 +25,11 @@ TType* NBool::typeChk(Symtable t,TType* exp){
 TType* NArray::typeChk(Symtable t,TType* exp){
 	bool ok=true;
 	for(int i=0; i<values.size();i++){
-		ok= ok && ((TArray*)type)->type == *(values[i]->typeChk(t,exp));
+		ok= ok && (*((TArray*)type)->type) == *(values[i]->typeChk(t,exp));
 	}
 
 	if(!ok) {
-		Log::add(Msg(0,"Array elements of diferent types",2));
+		log.add(Msg(0,"Array elements of diferent types",2));
 		return NULL;
 	}
 
@@ -47,27 +46,27 @@ TType* NArrayAccess::typeChk(Symtable t,TType* exp){
 	TType* ltype = lexpr->typeChk(t,exp);
 	TType* itype = index->typeChk(t,exp);
 	if(!ltype->isArr){
-		Log::add(Msg(0,"Array access of non-array type",2));
+		log.add(Msg(0,"Array access of non-array type",2));
 		return NULL;
 	}
 	if(ltype->name!="Integer"){
-		Log::add(Msg(0,"Array index must be an integer",2));
+		log.add(Msg(0,"Array index must be an integer",2));
 		return NULL;
 	}
-	type= &(((TArray*)ltype)->type);
+	type= ((TArray*)ltype)->type;
 	return type;
 }
 
 TType* NStructAccess::typeChk(Symtable t, TType* exp){
 	TType* ltype = lexpr->typeChk(t,exp);
 	if(!ltype->isStruct){
-		Log::add(Msg(0,"Trying to access a member of a non-structured type",2));
+		log.add(Msg(0,"Trying to access a member of a non-structured type",2));
 		return NULL;
 	}
 	type = ((TStructured*)ltype)->accessType(name);
 	if (type==NULL){
 		
-		Log::add(Msg(0,type->name+" doesn't have a field named "+name,2));
+		log.add(Msg(0,type->name+" doesn't have a field named "+name,2));
 		return NULL;
 	}
 	return type;
@@ -273,7 +272,7 @@ TType* NReturn::typeChk(Symtable t,TType* exp){
 	}
 	
 	if(!(*texp == *exp)){
-		Log::add(Msg(0,"Return type doesn't match",2));
+		log.add(Msg(0,"Return type doesn't match",2));
 		return NULL;
 	}
 

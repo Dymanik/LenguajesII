@@ -1,7 +1,9 @@
 #ifndef BLAHAST
-#define AST
+#define BlAHAST
 #include "blahsymtable.h"
+#include "blahlog.h"
 #include <iostream>
+
 
 class NStatement;
 class NExpression;
@@ -64,7 +66,7 @@ class NFloat : public NExpression {
 class NString : public NExpression {
 	public:
 		std::string value;
-		NString(std::string value):value(value),NExpression(new TArray(*(new TChar()),(int)value.length())){}
+		NString(std::string value):value(value),NExpression(new TArray((new TChar()),(int)value.length())){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		void print(std::ostream& os,int depth=0);
 };
@@ -117,7 +119,7 @@ class NStructAccess : public NLRExpression{
 	public:
 		NLRExpression *lexpr;
 		std::string name;
-		NStructAccess(NLRExpression *lexpr,std::string name);
+		NStructAccess(NLRExpression *lexpr,std::string name):lexpr(lexpr),name(name),NLRExpression(NULL){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		void print(std::ostream& os,int depth=0);
 };

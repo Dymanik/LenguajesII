@@ -22,15 +22,15 @@ void Msg::print(std::ostream &os) const{
 	os<<std::endl;
 }
 
-/*
+
 void Log::add(Msg m){
 	messages.push(m);
 }
 
-void static Log::print(std::ostream& os){
+void Log::print(std::ostream& os){
 	while(!messages.empty()){
 		messages.top().print(os);
 		messages.pop();
 	}
 }
-*/
+

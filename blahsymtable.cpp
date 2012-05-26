@@ -1,5 +1,17 @@
 #include "blahsymtable.h"
 
+TArray::TArray(TType* typ, sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true){
+	length = sizes.front();
+	if(sizes.empty()){
+		type=new TArray(typ,sizes.front());
+	} else{
+		sizes.pop_front();
+		type=new TArray(typ,sizes);
+	}
+}
+
+
+
 void TRegister::addField(TVar *typ, std::string name){
 	fields[name]=typ;
 	size+=typ->type.size;
@@ -19,9 +31,9 @@ TType* TStructured::accessType(std::string name){
 		return NULL;
 	}
 	return &it->second->type;
-
-
 }
+
+
 
 /**insert functions,vars and types*/
 void Symtable::insert(TType* t){
@@ -29,7 +41,7 @@ void Symtable::insert(TType* t){
 }
 
 void Symtable::insert(TVar* v){
-	vars[std::pair<std::string,int>(v->name,scopeStack.front())]=v;
+	vars[Tuple(v->name,scopeStack.front())]=v;
 }
 
 void Symtable::insert(TFunc* f){
@@ -43,17 +55,17 @@ void Symtable::insert(TFunc* f){
 /** lookups types, vars, and functions*/
 
 TVar* Symtable::lookupLocalVar(const std::string name){
-	std::unordered_map<std::pair<std::string,int>,TVar*>::iterator it;
-	it=vars.find(make_pair(name,scopeStack.front()));
+	std::unordered_map<Tuple,TVar*>::iterator it;
+	it=vars.find(Tuple(name,scopeStack.front()));
 	if (it==vars.end()) return NULL;
 	return it->second;
 }
 
 TVar* Symtable::lookupVar(const std::string name){
-	std::unordered_map<std::pair<std::string,int>,TVar*>::iterator it;
+	std::unordered_map<Tuple,TVar*>::iterator it;
 	std::list<int>::iterator lit;
 	for(lit=scopeStack.begin();lit!=scopeStack.end();lit++){
-		it=vars.find(make_pair(name,*lit));
+		it=vars.find(Tuple(name,*lit));
 		if (it!=vars.end()) {
 			return it->second;
 		}

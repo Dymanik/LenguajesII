@@ -21,17 +21,10 @@ class Msg{
 };
 
 class Log{
-	static std::priority_queue<Msg> messages;
+	std::priority_queue<Msg> messages;
 	public:
-	void static add(Msg m){
-		messages.push(m);
-	}
-	void static print(std::ostream& os){
-		while(!messages.empty()){
-			messages.top().print(os);
-			messages.pop();
-		}
-	}
+	void add(Msg m);
+	void print(std::ostream& os);
 };
 
 #endif

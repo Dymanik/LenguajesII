@@ -12,6 +12,7 @@
 
 char string_buf[MAX_STR_CONST];
 char *string_buf_ptr;
+extern Log log;
 
 
 int yycolumn=1;
@@ -39,27 +40,27 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 
 	[1-9][0-9]*			{	yylval.integer=strtol(yytext,NULL,10);
 							if(yylval.integer < std::numeric_limits<int>::min()){
-								Log::add(Msg(yylineno,"Integer underflow",1));
+								log.add(Msg(yylineno,"Integer underflow",1));
 							} else if(yylval.integer > std::numeric_limits<int>::max()){
-								Log::add(Msg(yylineno,"Integer overflow",1));
+								log.add(Msg(yylineno,"Integer overflow",1));
 							}
 							return INT;
 						}
 
 	0[0-7]*				{	yylval.integer=strtol(yytext,NULL,8);
 							if(yylval.integer < std::numeric_limits<int>::min()){
-								Log::add(Msg(yylineno,"Integer underflow",1));
+								log.add(Msg(yylineno,"Integer underflow",1));
 							} else if(yylval.integer > std::numeric_limits<int>::max()){
-								Log::add(Msg(yylineno,"Integer overflow",1));
+								log.add(Msg(yylineno,"Integer overflow",1));
 							}
 							return INT;
 						}
 	
 	0x[0-9A-Fa-f]*		{	yylval.integer=strtol(yytext,NULL,16);
 							if(yylval.integer < std::numeric_limits<int>::min()){
-								Log::add(Msg(yylineno,"Integer underflow",1));
+								log.add(Msg(yylineno,"Integer underflow",1));
 							} else if(yylval.integer > std::numeric_limits<int>::max()){
-								Log::add(Msg(yylineno,"Integer overflow",1));
+								log.add(Msg(yylineno,"Integer overflow",1));
 							}
 							return INT;
 						}
@@ -67,9 +68,9 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 	{DOUBLE}			{
 							yylval.integer=strtod(yytext,NULL);
 							if(yylval.integer < std::numeric_limits<float>::min()){
-								Log::add(Msg(yylineno,"Integer underflow",1));
+								log.add(Msg(yylineno,"Integer underflow",1));
 							} else if(yylval.integer > std::numeric_limits<float>::max()){
-								Log::add(Msg(yylineno,"Integer overflow",1));
+								log.add(Msg(yylineno,"Integer overflow",1));
 							}
 							
 							return FLOAT;
@@ -123,7 +124,7 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 	"string"			{return STRING;}
 	"register"			{return REGISTER;}
 	"union"				{return UNION;}
-	"arrayof"			{return ARRAY;}
+	"Arrayof"			{return ARRAY;}
 
 	[A-Z][A-Za-z0-9_]*	{yylval.string = new std::string(yytext, yyleng); return TYPEID;}
 	[a-z][A-Za-z0-9_]* 	{yylval.string = new std::string(yytext, yyleng); return ID;}
@@ -153,7 +154,7 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 				}
 
 	\n			{
-					Log::add(Msg(yylineno,"Unterminated string", 2));
+					log.add(Msg(yylineno,"Unterminated string", 2));
 					lexerror=true;
 					yylineno++;yycolumn=1;
 				}
@@ -180,7 +181,7 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 				}
 
 	\n			{
-					Log::add(Msg(yylineno,"Unterminated string", 2));
+					log.add(Msg(yylineno,"Unterminated string", 2));
 					lexerror=true;
 					yylineno++;yycolumn=1;
 				}
@@ -192,7 +193,7 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 }
 
 <CHR>{
-    \n                  {Log::add(Msg(yylineno,"Unexpected newline",2));
+    \n                  {log.add(Msg(yylineno,"Unexpected newline",2));
 							lexerror=true;
                             yycolumn = 1;}
 

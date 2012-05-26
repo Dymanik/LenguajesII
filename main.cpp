@@ -9,7 +9,7 @@ using namespace std;
 #ifdef DEBUG
 extern int yydebug;
 #endif
-
+Log log;
 extern int yyparse();
 extern NBlock *ProgramAST;
 extern Symtable Table;

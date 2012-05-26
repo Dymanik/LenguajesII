@@ -6,6 +6,27 @@
 #include <unordered_map>
 class TVar;
 
+typedef std::list<int> sizelist; 
+
+class Tuple{
+	public:
+		std::string id;
+		int scope;
+		Tuple(std::string id,int scope):id(id),scope(scope){}
+		bool operator==(const Tuple a) const{
+			return id==a.id && scope==a.scope;
+		}
+};
+
+namespace std{
+	template<> class hash<Tuple>{
+		public:
+			size_t operator()(const Tuple &s) const { 
+				return hash<string>()(s.id)+s.scope;
+			}
+	};
+};
+
 class TElement{
 	public:
 		std::string name;
@@ -46,6 +67,10 @@ class TFloat: public TType{
 		TFloat():TType("Float",4,true,true){};
 };
 
+class TError: public TType{
+	public:
+		TError():TType("Error",0,true){};
+};
 
 class TChar: public TType{
 	public:
@@ -92,12 +117,13 @@ class TUnion: public TStructured{
 
 class TArray: public TType{
 	public:
-		TType& type;
+		TType* type;
 		int length;
-		TArray(TType& typ, int length):TType("Array",typ.size*length,false,false,false,true),type(typ),length(length){}
+		TArray(TType* typ, int length):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true),type(typ),length(length){}
 
+		TArray(TType*, sizelist);
         bool operator==(const TArray &t2)const{
-            return type == t2.type && length == t2.length;
+            return *type == *t2.type && length == t2.length;
         }
 
 };
@@ -121,7 +147,7 @@ class TFunc: public TElement{
 //SYMTABLE
 class Symtable {
 	private:
-		std::unordered_map<std::pair<std::string,int>,TVar*> vars;
+		std::unordered_map<Tuple,TVar*> vars;
 		std::unordered_map<std::string,TFunc*> functions;
 		std::unordered_map<std::string,TType*> types;
 		std::list<int> scopeStack;

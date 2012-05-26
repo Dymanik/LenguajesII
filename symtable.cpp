@@ -11,15 +11,12 @@
 using namespace std;
 class Tuple{
 	public:
-		string id;
+		std::string id;
 		int scope;
-		Tuple(string id,int scope):id(id),scope(scope){}
+		Tuple(std::string id,int scope):id(id),scope(scope){}
 		bool operator==(const Tuple a) const{
 			return id==a.id && scope==a.scope;
 		}
-		/*tuple operator=(const tuple& a){
-		  return tuple(a.id,a.scope);
-		  }*/
 
 };
 
