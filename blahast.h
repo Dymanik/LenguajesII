@@ -143,8 +143,10 @@ class NFunctionCall : public NExpression {
 	public:
 		std::string name;
 		ExpressionList arguments;
+		TFunc* func;
 		NFunctionCall(std::string name, ExpressionList arguments) : name(name), arguments(arguments){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 		
 };

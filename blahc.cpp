@@ -28,14 +28,14 @@ int main(int argc, char **argv){
 	void* t;
 		programAST->print(std::cout);
 	if(programAST!=NULL){
-		t=programAST->typeChk(table);
 		cout<<"===========AST========"<<endl;
+		t=programAST->typeChk(table);
 		programAST->print(std::cout);
 		cout<<"=====SymbolTable======"<<endl;
 		table.print(std::cout);
 		iblock = new IBlock();
-		programAST->codeGen(iblock);
 		cout<<"=========TAC=========="<<endl;
+		programAST->codeGen(iblock);
 		iblock->print(std::cout);
 	}else{
 		cout<<"parse error"<<endl;

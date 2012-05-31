@@ -89,7 +89,8 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 		log.add(Msg(0,"typeerror on arguments",2));
 		return NULL;
 	}
-	type =& (t.lookupFunc(name,argTypes))->type;
+	func=t.lookupFunc(name,argTypes);
+	type=&func->type;
 
 	if(type==NULL){
 		log.add(Msg(0,"function not defined",2));

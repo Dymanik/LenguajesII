@@ -27,6 +27,8 @@ string Operand::toStr(){
 		case VAR:
 			os<<value.var->name;
 			break;
+		case FUNC:
+			os<<"FUNC: "<<value.func->name;
 		case LABEL:
 			os<<"LABEL:"<<value.label;
 			break;
@@ -64,9 +66,31 @@ void Quad::print(std::ostream &os){
 		case COPY:
 			cout<<result->toStr()<<" := "<< arg1->toStr();
 			break;
-
-
+		case GOTO:
+			cout<<"goto "<<result->toStr();
+			break;
+		case IFEQ:
+			cout<<"if "<<arg1->toStr()<<" == "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case IFNEQ:
+			cout<<"if "<<arg1->toStr()<<" != "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case IFLT:
+			cout<<"if "<<arg1->toStr()<<" < "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case IFGT:
+			cout<<"if "<<arg1->toStr()<<" > "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case IFLEQ:
+			cout<<"if "<<arg1->toStr()<<" <= "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case IFGEQ:
+			cout<<"if "<<arg1->toStr()<<" >= "<< arg2->toStr()<<" goto "<< result->toStr();
+			break;
+		case CALL:
+			cout<<"call "<< result->toStr();
+			break;
 	}
-	if(comment.size()>0)cout<<" #"<<comment<<endl;
+	if(comment.size()>0)cout<<" #"<<comment;
 	cout<<endl;
 }

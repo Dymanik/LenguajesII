@@ -7,7 +7,7 @@
 
 struct Operand{
 	enum TYPE{
-		TEMP,INT,BOOL,CHAR,FLOAT,VAR,LABEL
+		TEMP,INT,BOOL,CHAR,FLOAT,VAR,FUNC,LABEL
 	}type;
 	union VAL{
 		int temp;
@@ -17,12 +17,14 @@ struct Operand{
 		float floating;
 		int label;
 		TVar *var;
+		TFunc *func;
 	} value;
 
 	Operand(char val):type(CHAR){value.character=val;}
 	Operand(int val):type(INT){value.integer=val;}
 	Operand(bool val):type(BOOL){value.boolean=val;}
 	Operand(TVar* val):type(VAR){value.var=val;}
+	Operand(TFunc* val):type(FUNC){value.func=val;}
 	Operand(float val):type(FLOAT){value.floating=val;}
 	Operand(int val,bool lab){
 		if(lab){
@@ -50,8 +52,7 @@ class Inst{
 class Quad:public Inst{
 	public:
 	enum OP {ADD,SUB,MUL,DIV,MOD,UMINUS,CALL,PARAM,
-		RETURN,COPY,GOTO,REF,DEREF,IF,IFNOT,
-		IFEQ,IFNEQ,IFLT,IFLEQ,IFGT,IFGEQ 
+		RETURN,COPY,GOTO,IFEQ,IFNEQ,IFLT,IFLEQ,IFGT,IFGEQ 
 	};
 
 	std::string comment;
