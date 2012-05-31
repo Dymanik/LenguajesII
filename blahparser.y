@@ -78,7 +78,7 @@ Log log;
 %left	<token> ACCESS
 
 %locations
-
+%error-verbose
 %start program
 %%
 
@@ -265,7 +265,7 @@ stmt		: ctrl_if
 			| var_asgn '.'
 			| varr_decl '.'		{$$ = $1;}
 			| fun_call '.'		{$$ = new NExpressionStatement($1);}	
-			| RETURN expr '.'	{std::cout<<"has";$$ = new NReturn($2);}
+			| RETURN expr '.'	{$$ = new NReturn($2);}
 			| RETURN '.'		{$$ = new NReturn();}
 			| STOP '.'			{$$ = new NStop();}
 			| NEXT '.'			{$$ = new NNext();}

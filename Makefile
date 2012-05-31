@@ -3,7 +3,7 @@ GCC=g++
 LEX=flex
 BISON=bison
 
-CFLAGS=-std=c++0x
+CFLAGS=-std=c++0x -O3 
 CFLAGS+=$(CFLAGSADD)
 FILES = blahsymtable\
 		typechk\

@@ -11,13 +11,12 @@ sistema de tipos estático y similar a C/C++.
 El léxico del lenguaje está basado en el lenguaje natural. Las palabras reservadas del lenguaje, que no pueden ser usadas por el programador
 ni redefinidas son:
 
-    integer, boolean, floating, char, string, for, from, to,
+    Integer, Boolean, Floating, Char, String, for, from, to,
     while, do, if, then, else, return, stop, next, print, read,
-    register, union, arrayof, true, false, plus, minus,
+    register, union, Arrayof, true, false, plus, minus,
     times, dividedby, void, and, or, is, not.
 
-Un identificador es una secuencia de letras, dígitos y underscores, comenzando por una letra. BLAH es sensible a la capitalización, por ejemplo, foo y FOO 
-son identificadores diferentes.
+Un identificador es una secuencia de letras, dígitos y underscores, comenzando por una letra. BLAH es sensible a la capitalización, por ejemplo, foo y fOO son identificadores diferentes. Todos los tipos deben comenzar por una mayuscula, mientras que las variables y las funciones con una minuscula.
 
 Los espacios en blanco (i.e espacios, tabs, etc) sirven para separar tokens pero de resto son ignorados. Palabras reservadas e identificadores deben
 estar separados por un espacio en blanco, o un token que no sea palabra reservada ni otro identificador. En otras palabras, `arrayofinteger` es un identificador
@@ -31,7 +30,7 @@ Un entero hexadecimal debe empezar con `0x` o con `0X` y seguido de una secuenci
 Los dígitos hexadecimales incluyen los dígitos decimales y las letras del abecedario de la `a` a la `f`, en mayúsculas o minúsculas por igual.
 Para dejar constancia, los siguientes son enteros válidos:
 
-    8, 16, 01234, 0x5ad89, 0X4Eb23, 09842
+    8, 16, 01234, 0x5ad89, 0X4Eb23, 02342
 
 Un número flotante es una secuencia de dígitos decimales, un punto, y continúa con otra secuencia de dígitos. Por tanto, ni `.12` ni `12.` son válidos,
 pero 12.0 y 0.12 si lo son. Un número decimal puede tener un exponente opcional, que se denota con una `e` (minúscula o mayúscula) al final del número

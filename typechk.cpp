@@ -30,7 +30,7 @@ TType* NArray::typeChk(Symtable t,TType* exp){
 
 	if(!ok) {
 		log.add(Msg(0,"Array elements of diferent types",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 
 	return type;
@@ -45,13 +45,18 @@ TType* NArrayAccess::typeChk(Symtable t,TType* exp){
 
 	TType* ltype = lexpr->typeChk(t,exp);
 	TType* itype = index->typeChk(t,exp);
+
+	if(*ltype==TError() || *itype==TError()){
+		return t.lookupType("error");
+	}
+
 	if(!ltype->isArr){
 		log.add(Msg(0,"Array access of non-array type",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	if(ltype->name!="Integer"){
 		log.add(Msg(0,"Array index must be an integer",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	type= ((TArray*)ltype)->type;
 	return type;
@@ -61,13 +66,13 @@ TType* NStructAccess::typeChk(Symtable t, TType* exp){
 	TType* ltype = lexpr->typeChk(t,exp);
 	if(!ltype->isStruct){
 		log.add(Msg(0,"Trying to access a member of a non-structured type",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	type = ((TStructured*)ltype)->accessType(name);
 	if (type==NULL){
 		
 		log.add(Msg(0,type->name+" doesn't have a field named "+name,2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	return type;
 	
@@ -79,7 +84,7 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 	TType* temp;
 	for(int i=0;i<arguments.size();i++){
 		temp=arguments[i]->typeChk(t,exp);
-		if(temp==NULL){
+		if(temp->name=="error"){
 			ok=ok&&false;
 		}else{
 			argTypes.push_back(temp);
@@ -87,14 +92,14 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 	}
 	if(!ok){
 		log.add(Msg(0,"typeerror on arguments",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	func=t.lookupFunc(name,argTypes);
 	type=&func->type;
 
-	if(type==NULL){
+	if(func==NULL){
 		log.add(Msg(0,"function not defined",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 	return type;
 }
@@ -103,10 +108,6 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 	TType* ltype = lexp->typeChk(t,exp);
 	TType* rtype = rexp->typeChk(t,exp);
 
-	if(ltype==NULL || rtype==NULL){
-		return NULL;
-	}
-
 	if(ltype->isNumeric && rtype->isNumeric){
 		type=ltype;
 		if(rtype->name=="Double"){
@@ -114,7 +115,7 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 		}
 		return type;
 	}else{
-		return NULL;
+		return t.lookupType("error");
 	}
 }
 
@@ -122,15 +123,12 @@ TType* NBooleanBinaryOperator::typeChk(Symtable t ,TType* exp){
 	TType* ltype = lexp->typeChk(t,exp);
 	TType* rtype = rexp->typeChk(t,exp);
 
-	if(ltype==NULL || rtype==NULL){
-		return NULL;
-	}
 	
 	if(*ltype==*rtype && ltype->name=="Bool"){
 		type=ltype;
 		return type;
 	}
-	return NULL;
+	return t.lookupType("error");
 }
 
 
@@ -138,51 +136,40 @@ TType* NComparison::typeChk(Symtable t,TType* exp){
 	TType* ltype = lexp->typeChk(t,exp);
 	TType* rtype = rexp->typeChk(t,exp);
 
-	if(ltype==NULL || rtype==NULL){
-		return NULL;
-	}
 
 	if(ltype->isNumeric && rtype->isNumeric){
 		return t.lookupType("Bool");
 	}
-	return NULL;
+	return t.lookupType("error");
 }
 
 TType* NAritmeticUnaryOperator::typeChk(Symtable t, TType* exp){
 	TType* rtype = rexp->typeChk(t,exp);
 
-	if(rtype==NULL){
-		return NULL;
-	}
-
 	if(rtype->isNumeric){
 		type=rtype;
 		return rtype;
 	}
-	return NULL;
+	return t.lookupType("error");
 	
 }
 
 TType* NBooleanUnaryOperator::typeChk(Symtable t, TType* exp){
 	TType* rtype = rexp->typeChk(t,exp);
 
-	if(rtype==NULL){
-		return NULL;
-	}
-
 	if(rtype->name=="Bool"){
 		type=rtype;
 		return rtype;
 	}
-	return NULL;
+	return t.lookupType("error");
 }
 
 TType* NBlock::typeChk(Symtable t, TType* exp){
 	bool ok=true;
 	for(int i=0;i<statements.size();i++){
-		ok=ok && statements[i]->typeChk(t,exp)!=NULL;
+		ok=ok && statements[i]->typeChk(t,exp)->name!="error";
 	}
-	if(!ok)return NULL;
+	if(!ok)return t.lookupType("error");
 	return t.lookupType("Void");
 
 }
@@ -210,13 +197,13 @@ TType* NFunctionDeclaration::typeChk(Symtable t,TType* exp){
 TType* NWhileDo::typeChk(Symtable t,TType* exp){
 	
 	TType* temp = cond->typeChk(t,exp);
-	if(block->typeChk(t,exp)==NULL || temp == NULL){
-		return NULL;
+	if(*(block->typeChk(t,exp))==TError()){
+		return t.lookupType("error");
 	}
 
 	if(temp->name!="Bool"){
 
-		return NULL;
+		return t.lookupType("error");
 	}
 
 	return t.lookupType("Void");
@@ -225,13 +212,12 @@ TType* NWhileDo::typeChk(Symtable t,TType* exp){
 TType* NDoWhile::typeChk(Symtable t,TType* exp){
 	
 	TType* temp = cond->typeChk(t,exp);
-	if(block->typeChk(t,exp)==NULL || temp == NULL){
-		return NULL;
+	if(*(block->typeChk(t,exp))==TError()){
+		return t.lookupType("error");
 	}
 
 	if(temp->name!="Bool"){
-
-		return NULL;
+		return t.lookupType("error");
 	}
 
 	return t.lookupType("Void");
@@ -240,16 +226,16 @@ TType* NDoWhile::typeChk(Symtable t,TType* exp){
 TType* NIf::typeChk(Symtable t, TType* exp){
 	
 	TType* temp = cond->typeChk(t,exp);
-	if(block->typeChk(t,exp)==NULL || temp == NULL){
-		return NULL;
+	if(*(block->typeChk(t,exp))==TError()){
+		return t.lookupType("error");
 	}
 
-	if(elseBlock != NULL && elseBlock->typeChk(t,exp)==NULL){
-		return NULL;
+	if(elseBlock != NULL && elseBlock->typeChk(t,exp)->name=="error"){
+		return t.lookupType("error");
 	}
 
 	if(temp->name!="Bool"){
-		return NULL;
+		return t.lookupType("error");
 	}
 	
 	return t.lookupType("Void");
@@ -265,18 +251,19 @@ TType* NForRange::typeChk(Symtable t, TType* exp){
 TType* NForVar::typeChk(Symtable t, TType* exp){
 	return t.lookupType("Void");
 }
+
 TType* NReturn::typeChk(Symtable t,TType* exp){
 
 	TType* texp;
 	if(expr==NULL){
 		texp = t.lookupType("Void");
 	}else{
-		TType* texp = expr->typeChk(t,exp);
+		texp = expr->typeChk(t,exp);
 	}
 
-	if(!(*texp == *exp)){
+	if(!(texp->name == exp->name)){
 		log.add(Msg(0,"Return type doesn't match",2));
-		return NULL;
+		return t.lookupType("error");
 	}
 
 	return t.lookupType("Void");
@@ -287,11 +274,14 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 	TType* ltype= var->typeChk(t,exp);
 	TType* rtype=assignment->typeChk(t,exp);
 
+
 	if(*ltype==*rtype){
 		return t.lookupType("Void");
+	}else{
+		log.add(Msg(0,"Asignment type doesn't match",2));
+		return t.lookupType("error");
 	}
 
-	return NULL;
 }
 
 

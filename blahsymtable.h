@@ -52,8 +52,6 @@ class TType: public TElement {
 		TType(std::string name,unsigned size,unsigned alignment,bool basic=false, bool numeric=false, bool struc=false,bool isArr=false):TElement(name,true),size(size),alignment(alignment),basic(basic),isNumeric(numeric),isStruct(struc),isArr(isArr){};
 
         bool operator==(const TType &t2)const{
-			std::cout<<name<<std::endl;
-			std::cout<<t2.name<<std::endl;
             return name == t2.name;
         }
 
@@ -88,7 +86,7 @@ class TChar: public TType{
 
 class TUndef: public TType{
 	public:
-		TUndef():TType("Undef",0,1,true){};
+		TUndef():TType("undef",0,1,true){};
 };
 
 class TVoid: public TType{
