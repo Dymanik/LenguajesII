@@ -8,7 +8,11 @@ CFLAGS+=$(CFLAGSADD)
 FILES = blahsymtable\
 		typechk\
 		printast\
-		blahlog
+		blahlog\
+		printsymtable\
+		genTAC\
+		blahblock\
+		blahinstruction
 
 
 blahc: blahc.cpp blahparser.cpp blahlexer.cpp ${FILES:%=%.o}
@@ -24,8 +28,22 @@ blahparser.cpp: blahparser.y
 blahlexer.cpp: blahlexer.l
 	${LEX} -o $@ $^
 
-%.o: %.cpp
-	g++ $^ -c ${CFLAGS}
+%.o: %.cpp %.h
+	g++ $< -c ${CFLAGS}
+
+printast.o: 	printast.cpp 		blahast.h
+	g++ $< -c ${CFLAGS}
+genTAC.o: 		genTAC.cpp 			blahast.h
+	g++ $< -c ${CFLAGS}
+typechk.o: 		typechk.cpp 		blahast.h
+	g++ $< -c ${CFLAGS}
+blahblock.o:	blahblock.cpp 		blahblock.h
+	g++ $< -c ${CFLAGS}
+printsymtable.o:printsymtable.cpp 	blahsymtable.h
+	g++ $< -c ${CFLAGS}
+
+
+
 
 clean:
-		rm  blahparser.hpp blahlexer.cpp blahparser.cpp *.o
+		rm -f blahparser.hpp blahlexer.cpp blahparser.cpp *.o blahc

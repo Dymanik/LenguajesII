@@ -86,11 +86,13 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 		}
 	}
 	if(!ok){
+		log.add(Msg(0,"typeerror on arguments",2));
 		return NULL;
 	}
-	type = (t.lookupFunc(name,argTypes))->type;
+	type =& (t.lookupFunc(name,argTypes))->type;
 
 	if(type==NULL){
+		log.add(Msg(0,"function not defined",2));
 		return NULL;
 	}
 	return type;
@@ -188,7 +190,7 @@ TType* NVariableDeclaration::typeChk(Symtable t, TType* exp){
 	bool ok=true;
 	if(assignment!=NULL){
 		TType* temp=assignment->typeChk(t,exp);
-		if(!(*type==*temp)){
+		if(!(var->type==*temp)){
 			ok=false;
 		}
 	}
@@ -255,13 +257,13 @@ TType* NIf::typeChk(Symtable t, TType* exp){
 
 
 //FATLALTALTLA
-TType* NForRange::typeChk(Symtable t, TType* exp){}
-TType* NForVar::typeChk(Symtable t, TType* exp){}
-TType* NForArray::typeChk(Symtable t, TType* exp){}
-
-
-
-
+TType* NForRange::typeChk(Symtable t, TType* exp){
+	return t.lookupType("Void");
+	
+}
+TType* NForVar::typeChk(Symtable t, TType* exp){
+	return t.lookupType("Void");
+}
 TType* NReturn::typeChk(Symtable t,TType* exp){
 
 	TType* texp;
@@ -270,7 +272,7 @@ TType* NReturn::typeChk(Symtable t,TType* exp){
 	}else{
 		TType* texp = expr->typeChk(t,exp);
 	}
-	
+
 	if(!(*texp == *exp)){
 		log.add(Msg(0,"Return type doesn't match",2));
 		return NULL;

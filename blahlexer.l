@@ -39,9 +39,7 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 	"#"					BEGIN(CHR);
 
 	[1-9][0-9]*			{	yylval.integer=strtol(yytext,NULL,10);
-							if(yylval.integer < std::numeric_limits<int>::min()){
-								log.add(Msg(yylineno,"Integer underflow",1));
-							} else if(yylval.integer > std::numeric_limits<int>::max()){
+							if(yylval.integer > std::numeric_limits<int>::max()){
 								log.add(Msg(yylineno,"Integer overflow",1));
 							}
 							return INT;
@@ -66,11 +64,11 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 						}
 
 	{DOUBLE}			{
-							yylval.integer=strtod(yytext,NULL);
-							if(yylval.integer < std::numeric_limits<float>::min()){
-								log.add(Msg(yylineno,"Integer underflow",1));
-							} else if(yylval.integer > std::numeric_limits<float>::max()){
-								log.add(Msg(yylineno,"Integer overflow",1));
+							yylval.floating=strtod(yytext,NULL);
+							if(yylval.floating < std::numeric_limits<float>::min()){
+								log.add(Msg(yylineno,"Float underflow",1));
+							} else if(yylval.floating > std::numeric_limits<float>::max()){
+								log.add(Msg(yylineno,"Float overflow",1));
 							}
 							
 							return FLOAT;

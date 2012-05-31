@@ -2,8 +2,10 @@
 #define BlAHAST
 #include "blahsymtable.h"
 #include "blahlog.h"
+#include "blahinstruction.h"
+#include "blahblock.h"
 #include <iostream>
-
+#include <list>
 
 class NStatement;
 class NExpression;
@@ -26,8 +28,13 @@ class NExpression : public Node {
 	public:
 		TType* type;
 		bool constant;
+		std::list<int> truelist;
+		std::list<int> falselist;
 		NExpression(TType* type=new TUndef(),bool constant=true):type(type),constant(constant){}
 		
+		virtual Operand* codeGen(IBlock* block){
+			std::cerr<<"NOTIMPLEMENTED"<<std::endl;	
+		}
 };
 
 class NLRExpression : public NExpression{
@@ -37,6 +44,8 @@ class NLRExpression : public NExpression{
 };
 
 class NStatement : public Node {
+	public:
+	virtual void codeGen(IBlock* block){};
 };
 
 class NExpressionStatement : public NStatement {
@@ -51,6 +60,8 @@ class NInteger : public NExpression {
 		int value;
 		NInteger(int value):NExpression(new TInteger()),value(value){}
 		TType* typeChk(Symtable t ,TType* exp=NULL);
+		
+		Operand* codeGen(IBlock* block);
 
 		void print(std::ostream& os,int depth=0);
 };
@@ -60,6 +71,7 @@ class NFloat : public NExpression {
 		float value;
 		NFloat(float value):NExpression(new TFloat()),value(value){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -76,6 +88,7 @@ class NChar : public NExpression {
 		char value;
 		NChar(char value):NExpression(new TChar()),value(value){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 
 		void print(std::ostream& os,int depth=0);
 };
@@ -85,6 +98,7 @@ class NBool : public NExpression {
 		bool value;
 		NBool(bool value): NExpression(new TBool()),value(value){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -101,6 +115,7 @@ class NVar : public NLRExpression{
 		TVar* var;
 		NVar(TVar* var,bool islexpr=false) : NLRExpression(&(var->type),islexpr),var(var){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 		
 };
@@ -141,6 +156,7 @@ class NAritmeticBinaryOperator : public NExpression{
 		NExpression *rexp;
 		NAritmeticBinaryOperator(NExpression* lexp,std::string op,NExpression* rexp):op(op),lexp(lexp),rexp(rexp){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 
 };
@@ -152,6 +168,7 @@ class NBooleanBinaryOperator :public NExpression {
 		NExpression *rexp;
 		NBooleanBinaryOperator(NExpression* lexp,std::string op,NExpression* rexp):op(op),lexp(lexp),rexp(rexp){}
 		TType* typeChk(Symtable,TType* t=NULL);
+//		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 
 };
@@ -172,6 +189,7 @@ class NAritmeticUnaryOperator : public NExpression {
 		NExpression *rexp;
 		NAritmeticUnaryOperator(std::string op,NExpression* rexp):op(op),rexp(rexp){}
 		TType* typeChk(Symtable,TType*t=NULL);
+		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 		
 };
@@ -191,18 +209,18 @@ class NBlock : public NStatement{
 		StatementList statements;
 		NBlock() {}
 		TType* typeChk(Symtable,TType*t=NULL);
+		void codeGen(IBlock* );
 		void print(std::ostream& os,int depth=0);
 
 };
 
-
 class NVariableDeclaration : public NStatement {
 	public:
-		TType* type;
-		std::string name;
+		TVar* var;
 		NExpression *assignment;
-		NVariableDeclaration(TType* type,std::string name,NExpression *assignment=NULL): type(type),name(name), assignment(assignment){};
+		NVariableDeclaration(TVar* var,NExpression *assignment=NULL): var(var),assignment(assignment){};
 		TType* typeChk(Symtable,TType*t=NULL);
+		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
 
 };
@@ -223,8 +241,8 @@ class NFunctionDeclaration : public NStatement {
 class NRegisterDeclaration : public NStatement {
 	public:
 		std::string name;
-		VariableList fields;
-		NRegisterDeclaration(std::string name,VariableList fields):name(name),fields(fields){}
+		Fields fields;
+		NRegisterDeclaration(std::string name,Fields fields):name(name),fields(fields){}
 		void print(std::ostream& os,int depth=0);
 			
 };
@@ -232,8 +250,8 @@ class NRegisterDeclaration : public NStatement {
 class NUnionDeclaration : public NStatement {
 	public:
 		std::string name;
-		VariableList fields;
-		NUnionDeclaration(std::string name,VariableList fields):name(name),fields(fields){}
+		Fields fields;
+		NUnionDeclaration(std::string name,Fields fields):name(name),fields(fields){}
 		void print(std::ostream& os,int depth=0);
 			
 };
@@ -270,12 +288,12 @@ class NIf : public NStatement{
 
 class NForRange : public NStatement{
 	public:
-		std::string var;
+		TVar* var;
 		NExpression* beg;
 		NExpression* end;
 		NExpression* step;
 		NBlock* block;
-		NForRange(std::string var,NExpression* beg,NExpression* end, NBlock* block, NExpression* step=NULL):var(var),beg(beg),end(end),block(block){
+		NForRange(TVar* var,NExpression* beg,NExpression* end, NBlock* block, NExpression* step=NULL):var(var),beg(beg),end(end),block(block){
 			if (this->step==NULL){
 				this->step = new NInteger(1);
 			}
@@ -286,20 +304,20 @@ class NForRange : public NStatement{
 
 class NForArray : public NStatement{
 	public:
-		std::string var;
+		TVar* var;
 		NArray* array;
 		NBlock* block;
-		NForArray(std::string var, NArray* array,NBlock* block):var(var),array(array),block(block){}
+		NForArray(TVar* var, NArray* array,NBlock* block):var(var),array(array),block(block){}
 		TType* typeChk(Symtable,TType*t=NULL);
 		void print(std::ostream& os,int depth=0);
 };
 
 class NForVar : public NStatement{
 	public:
-		std::string var;
+		TVar* var;
 		NVar* array;
 		NBlock* block;
-		NForVar(std::string var,NVar* array,NBlock* block):var(var),array(array),block(block){}
+		NForVar(TVar* var,NVar* array,NBlock* block):var(var),array(array),block(block){}
 		TType* typeChk(Symtable,TType*t=NULL);
 		void print(std::ostream& os,int depth=0);
 };
@@ -332,6 +350,7 @@ class NAssignment : public NStatement{
 		NExpression* assignment;
 		NAssignment (NLRExpression* var,NExpression* assignment):var(var),assignment(assignment){}
 		TType* typeChk(Symtable,TType* t=NULL) ;
+		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
 };
 

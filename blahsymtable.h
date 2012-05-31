@@ -4,9 +4,11 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <iostream>
 class TVar;
 
-typedef std::list<int> sizelist; 
+typedef std::list<int> Sizelist; 
+typedef std::vector<std::pair<std::string,TVar*>> Fields;
 
 class Tuple{
 	public:
@@ -16,6 +18,7 @@ class Tuple{
 		bool operator==(const Tuple a) const{
 			return id==a.id && scope==a.scope;
 		}
+		void print(std::ostream& os,int depth=0) const;
 };
 
 namespace std{
@@ -32,6 +35,7 @@ class TElement{
 		std::string name;
 		bool isType;
 		TElement(std::string name,bool isType=false):name(name),isType(isType){}
+		virtual void print(std::ostream&,int d=0)=0;
 		virtual ~TElement(){}
 };
 
@@ -39,52 +43,57 @@ class TElement{
 class TType: public TElement {
 	public:
 		unsigned size;
+		unsigned alignment;
 		bool isArr;
 		bool isNumeric;
 		bool isStruct;
 		bool basic;
 
-		TType(std::string name,unsigned size,bool basic=false, bool numeric=false, bool struc=false,bool isArr=false):TElement(name,true),size(size),basic(basic),isNumeric(numeric),isStruct(struc),isArr(isArr){};
+		TType(std::string name,unsigned size,unsigned alignment,bool basic=false, bool numeric=false, bool struc=false,bool isArr=false):TElement(name,true),size(size),alignment(alignment),basic(basic),isNumeric(numeric),isStruct(struc),isArr(isArr){};
 
         bool operator==(const TType &t2)const{
+			std::cout<<name<<std::endl;
+			std::cout<<t2.name<<std::endl;
             return name == t2.name;
         }
+
+		void print(std::ostream&,int d=0);
 };
 
 
 //Basic Types
 class TInteger: public TType{
 	public:
-		TInteger():TType("Integer",4,true,true){};
+		TInteger():TType("Integer",4,4,true,true){};
 };
 
 class TBool: public TType{
 	public:
-		TBool():TType("Bool",1,true){};
+		TBool():TType("Bool",1,1,true){};
 };
 class TFloat: public TType{
 	public:
-		TFloat():TType("Float",4,true,true){};
+		TFloat():TType("Float",4,4,true,true){};
 };
 
 class TError: public TType{
 	public:
-		TError():TType("Error",0,true){};
+		TError():TType("error",0,1,true){};
 };
 
 class TChar: public TType{
 	public:
-		TChar():TType("Char",1,true,true){};
+		TChar():TType("Char",1,1,true,true){};
 };
 
 class TUndef: public TType{
 	public:
-		TUndef():TType("Undef",0,true){};
+		TUndef():TType("Undef",0,1,true){};
 };
 
 class TVoid: public TType{
 	public:
-		TVoid():TType("Void",0,true){};
+		TVoid():TType("Void",0,1,true){};
 };
 
 //Complex types
@@ -96,22 +105,24 @@ class Field{
 };
 
 class TStructured: public TType{
+	protected:
+	virtual void addField(TVar* type,std::string name)=0;
 	public:
 		std::unordered_map<std::string,TVar*> fields;
 		bool isUnion;
-		TStructured(std::string name,unsigned size,bool isUnion=false):TType(name,size,false,false,true),isUnion(isUnion){}
+		TStructured(std::string name,bool isUnion=false):TType(name,0,0,false,false,true),isUnion(isUnion){}
 		TType* accessType(std::string name);
-		virtual void addField(TVar* type,std::string name)=0;
+		void print(std::ostream&,int d=0);
 };
 
 class TRegister: public TStructured{
 	public:
-		TRegister(std::string name):TStructured(name,0){};
+		TRegister(std::string name,Fields fieldl);
 		void addField(TVar* var, std::string name);
 };
 class TUnion: public TStructured{
 	public:
-		TUnion(std::string name):TStructured(name,0,true){}
+		TUnion(std::string name,Fields fieldl);
 		void addField(TVar* var,std::string name);
 };
 
@@ -121,7 +132,7 @@ class TArray: public TType{
 		int length;
 		TArray(TType* typ, int length):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true),type(typ),length(length){}
 
-		TArray(TType*, sizelist);
+		TArray(TType*, Sizelist);
         bool operator==(const TArray &t2)const{
             return *type == *t2.type && length == t2.length;
         }
@@ -135,13 +146,15 @@ class TVar: public TElement{
 		TType& type;
 		int offset;
 		TVar(std::string name,TType& type):type(type),TElement(name){}
+		void print(std::ostream&,int d=0);
 };
 
 class TFunc: public TElement{
 	public:
-		TType* type;
+		TType& type;
 		std::vector<TType*> args;
-		TFunc(std::string name, TType* type, std::vector<TType*> args):TElement(name),type(type),args(args){}
+		TFunc(std::string name, TType& type, std::vector<TType*> args):TElement(name),type(type),args(args){}
+		void print(std::ostream&,int d=0);
 };
 
 //SYMTABLE
@@ -178,5 +191,12 @@ class Symtable {
 			scopeStack.clear();
 			scopeStack.push_front(1);
 		}
+
+
+		void printVars(std::ostream& os);
+		void printFuncs(std::ostream& os);
+		void printTypes(std::ostream& os);
+
+		void print(std::ostream& os);
 };
 #endif

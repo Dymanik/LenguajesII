@@ -1,18 +1,18 @@
 
-Integer s is 2.
-Char d is #$.
-Boolean b is true.
-Float a is 5.6.
+Integer s is -26887.
+Char d .
+Bool b is true.
+Float a is  476387668.6.
 
 Arrayof [10] Char z.
 Arrayof [10,20,35] Char k.
-Arrayof [3] Boolean bo is [true,false,true].
-Arrayof [2,2] Boolean asd = [[true,false],[true,true]].
-//arrayof [3] Boolean asdf = [true,1,true].
-//arrayof [true] Boolean asdf = [true].
+Arrayof [3] Bool bo.// is [true,false,true].
+Arrayof [2,2] Bool asd.// =// [[true,false],[true,true]].
+//arrayof [3] Bool asdf.// = //[true,1,true].
+//arrayof [true] Boolean asdf.// = [true].
 
 
-register ASDF{
+union ASDF{
 	Integer a,
 	Float c
 }
@@ -20,21 +20,31 @@ register ASDF{
 Integer e is s.
 
 register ASD{
-	Integer a
+	Integer a,
+	Bool d,
+	Float f,
+	Char c
 }
 
-Boolean prueba(Integer a, Char z){
+register FOO{
+	ASD a,
+	Integer q
+}
+
+
+
+Bool prueba(Integer a, Char z){
     return true.
 }
 
-Boolean prueba(){
+Bool prueba(){
     return false.
 }
 
 
 Integer main(){
 
-    Boolean y = prueba(1,#t).
+    Bool y = prueba(1,#t).
     ASDF a.
     b[#t] is b.
     b is b[1].

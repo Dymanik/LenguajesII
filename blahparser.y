@@ -8,7 +8,7 @@ extern int yylex (void);
 
 void yyerror(char const *s, ...);
 
-NBlock *ProgramAST;
+NBlock *programAST;
 bool flagerror=false;
 int flagfdecl=0;
 Symtable table;
@@ -31,7 +31,8 @@ Log log;
 	std::vector<NVariableDeclaration*> *varvec;
 	std::vector<NExpression*> *exprvec;
 	std::string *string;
-	sizelist* sizes;
+	Sizelist* sizes;
+	Fields* fields;
 	TType* type;
 	int token;
 	long long integer;
@@ -58,7 +59,7 @@ Log log;
 %type 	<lrexpr> lrexpr
 %type	<ident>	ident
 %type	<varvec> fun_decl_args var_decls 
-%type	<exprvec> fun_call_args expr_lst simple_arr_lst
+%type	<exprvec> fun_call_args expr_lst simple_arr_lst complx_arr_lst
 %type	<block>	program stmts block decls 
 %type 	<fun_decl> fun_firm
 %type   <const_arr> array complx_arr simple_arr
@@ -67,11 +68,12 @@ Log log;
 %type	<stmt>	ctrl_while ctrl_if var_asgn reg_decl union_decl
 %type	<type> type
 %type	<sizes> int_arr
+%type	<fields> fields
 
 /* Matematical operators precedence */
 %nonassoc <token>	EQ NEQ GEQ LEQ '<' '>'	
 %left	<token>	'+' '-' AND OR
-%left	<token> '*' '/'
+%left	<token> '*' '/' '%'
 %left 	<token> NEG NOT
 %left	<token> ACCESS
 
@@ -80,7 +82,7 @@ Log log;
 %start program
 %%
 
-program		: decls
+program		: decls			{programAST=$1;}
 			;
 
 decls		: decl			{$$=new NBlock();$$->statements.push_back($1);}
@@ -96,28 +98,48 @@ decl		: varr_decl '.' {$$=$1;}
 varr_decl	: var_decl
 			;
 
-var_decl	: type ID			{$$=new NVariableDeclaration($1,*$2);table.insert(new TVar(*$2,*$1));}
-			| type ID '=' expr	{$$=new NVariableDeclaration($1,*$2,$4);table.insert(new TVar(*$2,*$1));}
-			| type ID '=' array	{$$=new NVariableDeclaration($1,*$2,$4);table.insert(new TVar(*$2,*$1));}
+var_decl	: type ID			{
+								TVar *v = new TVar(*$2,*$1);
+								table.insert(v);
+								$$=new NVariableDeclaration(v);
+								}
+			| type ID '=' expr	{
+								TVar *v = new TVar(*$2,*$1);
+								table.insert(v);
+								$$=new NVariableDeclaration(v,$4);
+								}
+			| type ID '=' array	{
+								TVar *v = new TVar(*$2,*$1);
+								table.insert(v);
+								$$=new NVariableDeclaration(v,$4);
+								}
 			;
 
 fun_decl	: fun_firm block	{$1->block=$2;}
 			;
 
 
-union_decl	: UNION TYPEID beg_block var_decls end_block	{$$= new NUnionDeclaration(*$2,*$4);}
+union_decl	: UNION TYPEID beg_block fields end_block	{$$= new NUnionDeclaration(*$2,*$4);table.insert(new TUnion(*$2,*$4));}
 			;
 
 
-reg_decl	: REGISTER TYPEID beg_block var_decls end_block	{$$ = new NRegisterDeclaration(*$2,*$4);}
+reg_decl	: REGISTER TYPEID beg_block fields end_block	{$$ = new NRegisterDeclaration(*$2,*$4);table.insert(new TRegister(*$2,*$4));}
 			;
+
+fields		: type ID				{$$ = new Fields();$$->push_back(std::make_pair(*$2,new TVar(*$2,*$1)));}
+			| fields ',' type ID	{$1->push_back(std::make_pair(*$4,new TVar(*$4,*$3)));}
 
 var_decls 	: var_decl					{$$=new VariableList();$$->push_back($1);}	
 			| var_decls ',' var_decl	{$1->push_back($3);}
 			;
 
 
-fun_firm	: type ID fun_decl_args		{$$=new NFunctionDeclaration($1,*$2,*$3);}
+fun_firm	: type ID fun_decl_args		{$$=new NFunctionDeclaration($1,*$2,*$3);
+											std::vector<TType*> argtypes;
+											for(int i=0;i<$3->size();i++){
+												argtypes.push_back(&((*$3)[i]->var->type));
+											}
+										table.insert(new TFunc(*$2,*$1,argtypes));}
 			;
 
 fun_decl_args	: fun_scope ')'				{$$ = new VariableList();}
@@ -152,7 +174,7 @@ type		: TYPEID					{	TType* type = table.lookupType(*$1);
 			| STRING '[' INT ']'	{$$ = new TArray(table.lookupType("Char"),$3);}
 			;
 
-int_arr		: INT				{$$ = new sizelist();$$->push_back($1);}
+int_arr		: INT				{$$ = new Sizelist();$$->push_back($1);}
 			| int_arr ',' INT	{$1->push_back($3);}
 			;
 
@@ -170,6 +192,7 @@ arit_expr	: INT					{$$ = new NInteger($1);}
 			| expr '-' expr			{$$ = new NAritmeticBinaryOperator($1,"-",$3);}
 			| expr '*' expr			{$$ = new NAritmeticBinaryOperator($1,"*",$3);}
 			| expr '/' expr			{$$ = new NAritmeticBinaryOperator($1,"/",$3);}
+			| expr '%' expr			{$$ = new NAritmeticBinaryOperator($1,"%",$3);}
 			| '-' expr %prec NEG	{$$ = new NAritmeticUnaryOperator("-",$2);}
 			;
 
@@ -205,8 +228,8 @@ expr_lst	: expr				{$$= new ExpressionList(); $$->push_back($1);}
 simple_arr	: '[' expr_lst ']'	{$$ = new NArray(*$2);}
 			;
 
-complx_arr	: '[' simple_arr_lst ']'	{}
-			| '[' complx_arr_lst ']'		{}
+complx_arr	: '[' simple_arr_lst ']'	{$$ = new NArray(*$2);}
+			| '[' complx_arr_lst ']'	{$$ = new NArray(*$2);}
 			;
 
 array		: simple_arr
@@ -217,8 +240,8 @@ simple_arr_lst	: simple_arr					{$$= new ExpressionList(); $$->push_back($1);}
 				| simple_arr_lst ',' simple_arr {$1->push_back($3);}
 				;
 
-complx_arr_lst	: complx_arr
-				| complx_arr_lst ',' complx_arr
+complx_arr_lst	: complx_arr					{$$= new ExpressionList(); $$->push_back($1);}
+				| complx_arr_lst ',' complx_arr {$1->push_back($3);}
 				;
 
 block		: beg_block end_block {$$ = new NBlock();}
@@ -242,8 +265,8 @@ stmt		: ctrl_if
 			| var_asgn '.'
 			| varr_decl '.'		{$$ = $1;}
 			| fun_call '.'		{$$ = new NExpressionStatement($1);}	
+			| RETURN expr '.'	{std::cout<<"has";$$ = new NReturn($2);}
 			| RETURN '.'		{$$ = new NReturn();}
-			| RETURN expr '.'	{$$ = new NReturn($2);}
 			| STOP '.'			{$$ = new NStop();}
 			| NEXT '.'			{$$ = new NNext();}
 			;
@@ -260,10 +283,26 @@ ctrl_while	: WHILE expr DO block		{$$=new NWhileDo($2,$4);}
 			| DO block WHILE expr '.'	{$$=new NDoWhile($4,$2);}
 			;
 
-ctrl_for	: FOR ID FROM expr TO expr block			{$$=new NForRange(*$2,$4,$6,$7);}
-			| FOR ID FROM expr TO expr STEP expr block	{$$=new NForRange(*$2,$4,$6,$9,$8);}
-			| FOR ID IN ident block						{$$=new NForVar(*$2,$4,$5);}
-			| FOR ID IN  array block					{$$=new NForArray(*$2,$4,$5);}
+for			: FOR {table.begScope();}
+
+ctrl_for	: for ID FROM expr TO expr block			{
+														TVar *v = new TVar(*$2,*(new TInteger()));
+														table.insert(v);
+														$$=new NForRange(v,$4,$6,$7);
+														table.endScope();
+														}
+			| for ID FROM expr TO expr STEP expr block	{
+														TVar *v = new TVar(*$2,*(new TInteger()));
+														table.insert(v);
+														$$=new NForRange(v,$4,$6,$9,$8);
+														table.endScope();
+														}
+			| for ID IN ident block						{
+														TVar *v = new TVar(*$2,*($4->type));
+														table.insert(v);
+														$$=new NForVar(v,$4,$5);
+														table.endScope();
+														}
 			;
 
 

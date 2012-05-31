@@ -1,26 +1,59 @@
 #include "blahsymtable.h"
+#include <algorithm>
 
-TArray::TArray(TType* typ, sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true){
+
+TArray::TArray(TType* typ, Sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true){
 	length = sizes.front();
-	if(sizes.empty()){
+	if(sizes.size()==1){
 		type=new TArray(typ,sizes.front());
 	} else{
 		sizes.pop_front();
 		type=new TArray(typ,sizes);
+		name="Arrayof"+type->name;
 	}
 }
 
 
 
+
 void TRegister::addField(TVar *typ, std::string name){
+	int offset=size;
+	if(offset%typ->type.alignment!=0){
+		offset+= typ->type.alignment-(offset%typ->type.alignment);
+	}
+	typ->offset = offset;
 	fields[name]=typ;
-	size+=typ->type.size;
+	size=offset+typ->type.size;
+	
+
+
 }
 
 void TUnion::addField(TVar *typ, std::string name){
 	fields[name]=typ;
 	if(size<typ->type.size){
 		size=typ->type.size;
+	}
+}
+
+bool cmp(const std::pair<std::string,TVar*>  &a, const std::pair<std::string,TVar*> &b){
+	return a.second->type.alignment > b.second->type.alignment;
+};
+
+
+TRegister::TRegister(std::string name,Fields fieldl):TStructured(name){
+	std::sort(fieldl.begin(),fieldl.end(),cmp);
+	alignment = fieldl.front().second->type.alignment;
+	for(int i=0;i<fieldl.size();i++){
+		addField((fieldl[i]).second,(fieldl[i]).first);
+	}
+}
+
+TUnion::TUnion(std::string name,Fields fieldl):TStructured(name,true){
+	std::sort(fieldl.begin(),fieldl.end(),cmp);
+	alignment = fieldl.front().second->type.alignment;
+	for(int i=0;i<fieldl.size();i++){
+		addField((fieldl[i]).second,(fieldl[i]).first);
 	}
 }
 
