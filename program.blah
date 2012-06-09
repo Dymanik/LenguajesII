@@ -1,7 +1,7 @@
 
 Integer s is -26887.
 Char d .
-Bool b is true.
+Bool b is true && false || 2<4.
 Float a is  476387668.6.
 
 Arrayof [10] Char z.
@@ -50,6 +50,9 @@ Integer main(){
 	Integer x.
 	for a from 2 to 10 {
 		x=x.
+	}
+	while (x < 10) do {
+		x=x+1.
 	}
 	Integer s is a->a.
 	s=a->a.

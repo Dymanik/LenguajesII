@@ -54,6 +54,10 @@ class TType: public TElement {
         bool operator==(const TType &t2)const{
             return name == t2.name;
         }
+        
+		bool operator!=(const TType &t2)const{
+            return name != t2.name;
+        }
 
 		void print(std::ostream&,int d=0);
 };
@@ -109,7 +113,7 @@ class TStructured: public TType{
 		std::unordered_map<std::string,TVar*> fields;
 		bool isUnion;
 		TStructured(std::string name,bool isUnion=false):TType(name,0,0,false,false,true),isUnion(isUnion){}
-		TType* accessType(std::string name);
+		TVar* access(std::string name);
 		void print(std::ostream&,int d=0);
 };
 
@@ -162,9 +166,13 @@ class Symtable {
 		std::unordered_map<std::string,TFunc*> functions;
 		std::unordered_map<std::string,TType*> types;
 		std::list<int> scopeStack;
+		std::list<int> offsetStack;
 		int nextscope;
 	public:
-		Symtable():nextscope(1){scopeStack.push_front(0);}
+		Symtable():nextscope(1){
+			scopeStack.push_front(0);
+			offsetStack.push_front(0);
+		}
 		
 		void insert(TType*);
 		void insert(TVar*);
@@ -176,18 +184,22 @@ class Symtable {
         TType* lookupType(const std::string name);
 
         int begScope(){
+			offsetStack.push_front(0);
 			scopeStack.push_front(nextscope);
 			nextscope++;
 		}
 
         int endScope(){
+			offsetStack.pop_front();
 			scopeStack.pop_front();
 		}
 
 		int resetScope(){
 			nextscope=1;
 			scopeStack.clear();
-			scopeStack.push_front(1);
+			scopeStack.push_front(0);
+			offsetStack.clear();
+			offsetStack.push_front(0);
 		}
 
 

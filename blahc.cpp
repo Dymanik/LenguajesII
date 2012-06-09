@@ -39,7 +39,11 @@ int main(int argc, char **argv){
 			cout<<"=========TAC=========="<<endl;
 			programAST->codeGen(iblock);
 			iblock->print(std::cout);
+		}else{
+			std::cout<<"Type Error"<<std::endl;
 		}
+	}else{
+		std::cout<<"Syntax Error"<<std::endl;
 	}
 	log.print(std::cout);
 

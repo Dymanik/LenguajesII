@@ -9,9 +9,8 @@ class IBlock{
 		int nextinstr;
 		std::list <Inst*> instructions;
 		IBlock():nextinstr(0){}
-		int nextInstruction();
+		void backpatch(std::list<int> ,int);
 		void addinst(Inst* i);
-
 		void print(std::ostream &os);
 };
 

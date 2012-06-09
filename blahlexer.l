@@ -78,16 +78,16 @@ DOUBLE [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
 
 	"is"				{return '=';}
 
-	"=="				{return EQ;}
-	"<="				{return LEQ;}
-	">="				{return GEQ;}
-	"!="				{return NEQ;}
+	"=="				{return TEQ;}
+	"<="				{return TLEQ;}
+	">="				{return TGEQ;}
+	"!="				{return TNEQ;}
 	"->"				{return ACCESS;}
 
 	"&&"				|
-	"and"				{return AND;}
+	"and"				{return TAND;}
 	"||"				|
-	"or"				{return OR;}
+	"or"				{return TOR;}
 	"^"					|
 	"if"				{return IF;}
 	"then"				{return THEN;}

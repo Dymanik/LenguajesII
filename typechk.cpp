@@ -68,13 +68,13 @@ TType* NStructAccess::typeChk(Symtable t, TType* exp){
 		log.add(Msg(0,"Trying to access a member of a non-structured type",2));
 		return t.lookupType("error");
 	}
-	type = ((TStructured*)ltype)->accessType(name);
-	if (type==NULL){
+	var = ((TStructured*)ltype)->access(name);
+	if (var==NULL){
 		
 		log.add(Msg(0,type->name+" doesn't have a field named "+name,2));
 		return t.lookupType("error");
 	}
-	return type;
+	return &var->type;
 	
 }
 
@@ -91,14 +91,13 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 		}
 	}
 	if(!ok){
-		log.add(Msg(0,"typeerror on arguments",2));
 		return t.lookupType("error");
 	}
 	func=t.lookupFunc(name,argTypes);
 	type=&func->type;
 
 	if(func==NULL){
-		log.add(Msg(0,"function not defined",2));
+		log.add(Msg(0,"function "+name+" not defined",2));
 		return t.lookupType("error");
 	}
 	return type;
@@ -115,6 +114,7 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 		}
 		return type;
 	}else{
+		log.add(Msg(0,op+" operands must be numeric",3));
 		return t.lookupType("error");
 	}
 }
@@ -127,8 +127,11 @@ TType* NBooleanBinaryOperator::typeChk(Symtable t ,TType* exp){
 	if(*ltype==*rtype && ltype->name=="Bool"){
 		type=ltype;
 		return type;
+	}else{
+		log.add(Msg(0,op+" operands must be boolean",3));
+
+		return t.lookupType("error");
 	}
-	return t.lookupType("error");
 }
 
 
@@ -139,8 +142,10 @@ TType* NComparison::typeChk(Symtable t,TType* exp){
 
 	if(ltype->isNumeric && rtype->isNumeric){
 		return t.lookupType("Bool");
+	}else{
+		log.add(Msg(0,op+" operands must be numeric in comparison",3));
+		return t.lookupType("error");
 	}
-	return t.lookupType("error");
 }
 
 TType* NAritmeticUnaryOperator::typeChk(Symtable t, TType* exp){
@@ -149,8 +154,10 @@ TType* NAritmeticUnaryOperator::typeChk(Symtable t, TType* exp){
 	if(rtype->isNumeric){
 		type=rtype;
 		return rtype;
+	}else{
+		log.add(Msg(0,op+" operand must be numeric",3));
+		return t.lookupType("error");
 	}
-	return t.lookupType("error");
 	
 }
 
@@ -160,8 +167,10 @@ TType* NBooleanUnaryOperator::typeChk(Symtable t, TType* exp){
 	if(rtype->name=="Bool"){
 		type=rtype;
 		return rtype;
+	}else{
+		log.add(Msg(0,op+" operand must be boolean",3));
+		return t.lookupType("error");
 	}
-	return t.lookupType("error");
 }
 
 TType* NBlock::typeChk(Symtable t, TType* exp){
@@ -178,12 +187,9 @@ TType* NVariableDeclaration::typeChk(Symtable t, TType* exp){
 	bool ok=true;
 	if(assignment!=NULL){
 		TType* temp=assignment->typeChk(t,exp);
-		if(!(var->type==*temp)){
-			ok=false;
+		if(temp->name =="error"){
+			return t.lookupType("error");
 		}
-	}
-	if(!ok){
-		return false;
 	}
 	return t.lookupType("Void");
 }
@@ -202,7 +208,7 @@ TType* NWhileDo::typeChk(Symtable t,TType* exp){
 	}
 
 	if(temp->name!="Bool"){
-
+		log.add(Msg(0,"While condition must be a boolean expression",3));
 		return t.lookupType("error");
 	}
 
@@ -217,6 +223,7 @@ TType* NDoWhile::typeChk(Symtable t,TType* exp){
 	}
 
 	if(temp->name!="Bool"){
+		log.add(Msg(0,"While condition must be a boolean expression",3));
 		return t.lookupType("error");
 	}
 
@@ -235,6 +242,7 @@ TType* NIf::typeChk(Symtable t, TType* exp){
 	}
 
 	if(temp->name!="Bool"){
+		log.add(Msg(0,"If condition must be a boolean expression",3));
 		return t.lookupType("error");
 	}
 	
@@ -243,12 +251,28 @@ TType* NIf::typeChk(Symtable t, TType* exp){
 }
 
 
-//FATLALTALTLA
 TType* NForRange::typeChk(Symtable t, TType* exp){
+	TType* Tb = beg->typeChk(t,exp);
+	TType* Te = end->typeChk(t,exp);
+	TType* Ts = step->typeChk(t,exp);
+	bool ok=true;
+	if(*Tb!= *Te || *Te != *Ts || Ts->name != "Integer"){
+		log.add(Msg(0,"range expressions must be integers",3));
+		ok=false;
+	}
+
+	if(block->typeChk(t,exp)->name == "error") {
+		ok = false;
+	}
+
+	if (!ok){
+		return t.lookupType("error");
+	}
 	return t.lookupType("Void");
 	
 }
 TType* NForVar::typeChk(Symtable t, TType* exp){
+	
 	return t.lookupType("Void");
 }
 
@@ -262,6 +286,7 @@ TType* NReturn::typeChk(Symtable t,TType* exp){
 	}
 
 	if(!(texp->name == exp->name)){
+
 		log.add(Msg(0,"Return type doesn't match",2));
 		return t.lookupType("error");
 	}

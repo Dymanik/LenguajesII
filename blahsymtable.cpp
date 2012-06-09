@@ -2,7 +2,7 @@
 #include <algorithm>
 
 
-TArray::TArray(TType* typ, Sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,false,false,false,true){
+TArray::TArray(TType* typ, Sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,typ->alignment,false,false,false,true){
 	length = sizes.front();
 	if(sizes.size()==1){
 		type=new TArray(typ,sizes.front());
@@ -57,13 +57,14 @@ TUnion::TUnion(std::string name,Fields fieldl):TStructured(name,true){
 	}
 }
 
-TType* TStructured::accessType(std::string name){
+
+TVar* TStructured::access(std::string name){
 	std::unordered_map<std::string,TVar*>::iterator it;
 	it=fields.find(name);
 	if(it==fields.end()){
 		return NULL;
 	}
-	return &it->second->type;
+	return it->second;
 }
 
 
@@ -74,7 +75,15 @@ void Symtable::insert(TType* t){
 }
 
 void Symtable::insert(TVar* v){
+	int offset=offsetStack.front();
+	offsetStack.pop_front();
+	if(offset % v->type.alignment!=0){
+		offset+= v->type.alignment-(offset%v->type.alignment);
+	}
+	v->offset = offset;
 	vars[Tuple(v->name,scopeStack.front())]=v;
+	offset+=v->type.size;
+	offsetStack.push_front(offset);
 }
 
 void Symtable::insert(TFunc* f){

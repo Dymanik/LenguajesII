@@ -13,6 +13,8 @@ bool flagerror=false;
 int flagfdecl=0;
 Symtable table;
 Log log;
+int offset;
+
 %}
 
 %union{
@@ -71,16 +73,19 @@ Log log;
 %type	<fields> fields
 
 /* Matematical operators precedence */
-%nonassoc <token>	EQ NEQ GEQ LEQ '<' '>'	
-%left	<token>	'+' '-' AND OR
+%left	<token>	TOR
+%left	<token>	TAND
+%nonassoc <token>	TEQ TNEQ TGEQ TLEQ '<' '>'	
+%left	<token>	'+' '-' 
 %left	<token> '*' '/' '%'
-%left 	<token> NEG NOT
+%left 	<token> NEG TNOT
 %left	<token> ACCESS
 
 %locations
 %error-verbose
 %start program
 %%
+
 
 program		: decls			{programAST=$1;}
 			;
@@ -106,12 +111,13 @@ var_decl	: type ID			{
 			| type ID '=' expr	{
 								TVar *v = new TVar(*$2,*$1);
 								table.insert(v);
-								$$=new NVariableDeclaration(v,$4);
+								$$=new NVariableDeclaration(v,new NAssignment(new NVar(v),$4));
 								}
+
 			| type ID '=' array	{
 								TVar *v = new TVar(*$2,*$1);
 								table.insert(v);
-								$$=new NVariableDeclaration(v,$4);
+								$$=new NVariableDeclaration(v,new NAssignment(new NVar(v),$4));
 								}
 			;
 
@@ -188,28 +194,28 @@ expr		: lrexpr		{$$ = $1;}
 
 arit_expr	: INT					{$$ = new NInteger($1);}
 			| FLOAT					{$$ = new NFloat($1);}
-			| expr '+' expr			{$$ = new NAritmeticBinaryOperator($1,"+",$3);}
-			| expr '-' expr			{$$ = new NAritmeticBinaryOperator($1,"-",$3);}
-			| expr '*' expr			{$$ = new NAritmeticBinaryOperator($1,"*",$3);}
-			| expr '/' expr			{$$ = new NAritmeticBinaryOperator($1,"/",$3);}
-			| expr '%' expr			{$$ = new NAritmeticBinaryOperator($1,"%",$3);}
-			| '-' expr %prec NEG	{$$ = new NAritmeticUnaryOperator("-",$2);}
+			| expr '+' expr			{$$ = new NAritmeticBinaryOperator($1,NAritmeticBinaryOperator::ADD,$3);}
+			| expr '-' expr			{$$ = new NAritmeticBinaryOperator($1,NAritmeticBinaryOperator::SUB,$3);}
+			| expr '*' expr			{$$ = new NAritmeticBinaryOperator($1,NAritmeticBinaryOperator::MUL,$3);}
+			| expr '/' expr			{$$ = new NAritmeticBinaryOperator($1,NAritmeticBinaryOperator::DIV,$3);}
+			| expr '%' expr			{$$ = new NAritmeticBinaryOperator($1,NAritmeticBinaryOperator::MOD,$3);}
+			| '-' expr %prec NEG	{$$ = new NAritmeticUnaryOperator(NAritmeticUnaryOperator::UMINUS,$2);}
 			;
 
 bool_expr	: TRUE					{$$ = new NBool(true);}
 			| FALSE					{$$ = new NBool(false);}
-			| expr AND expr			{$$ = new NBooleanBinaryOperator($1,"AND",$3);}
-			| expr OR expr			{$$ = new NBooleanBinaryOperator($1,"OR",$3);}
-			| '!' expr %prec NOT	{$$= new NBooleanUnaryOperator("!",$2);}
+			| expr TAND expr			{$$ = new NBooleanBinaryOperator($1,NBooleanBinaryOperator::AND,$3);}
+			| expr TOR expr			{$$ = new NBooleanBinaryOperator($1,NBooleanBinaryOperator::OR,$3);}
+			| '!' expr %prec TNOT	{$$= new NBooleanUnaryOperator(NBooleanUnaryOperator::NOT,$2);}
 			| comparison
 			;
 
-comparison	: expr '<' expr	{$$ = new NComparison($1,"LT",$3);}
-			| expr '>' expr	{$$ = new NComparison($1,"GT",$3);}
-			| expr GEQ expr	{$$ = new NComparison($1,"GEQ",$3);}
-			| expr LEQ expr	{$$ = new NComparison($1,"LEQ",$3);}
-			| expr NEQ expr	{$$ = new NComparison($1,"NEQ",$3);}
-			| expr EQ expr	{$$ = new NComparison($1,"EQ",$3);}
+comparison	: expr '<' expr	{$$ = new NComparison($1,NComparison::LT,$3);}
+			| expr '>' expr	{$$ = new NComparison($1,NComparison::GT,$3);}
+			| expr TGEQ expr	{$$ = new NComparison($1,NComparison::GEQ,$3);}
+			| expr TLEQ expr	{$$ = new NComparison($1,NComparison::LEQ,$3);}
+			| expr TNEQ expr	{$$ = new NComparison($1,NComparison::NEQ,$3);}
+			| expr TEQ expr	{$$ = new NComparison($1,NComparison::EQ,$3);}
 			;
 
 lrexpr		: ident					{$$=$1;}
@@ -298,10 +304,15 @@ ctrl_for	: for ID FROM expr TO expr block			{
 														table.endScope();
 														}
 			| for ID IN ident block						{
-														TVar *v = new TVar(*$2,*($4->type));
-														table.insert(v);
-														$$=new NForVar(v,$4,$5);
-														table.endScope();
+														if($4->type->isArr){
+															TArray* t = (TArray*)$4->type;
+															TVar *v = new TVar(*$2,*t->type);
+															table.insert(v);
+															$$=new NForVar(v,$4,$5);
+															table.endScope();
+														}else{
+															flagerror=true;
+														}
 														}
 			;
 

@@ -6,7 +6,7 @@ string Operand::toStr(){
 	stringstream os;
 	switch(type){
 		case TEMP:
-			os<<"t"<<value.temp;
+			os<<"T"<<value.temp;
 			break;
 		case INT:
 			os<<value.integer;
@@ -36,7 +36,7 @@ string Operand::toStr(){
 	return os.str();
 }
 
-void Quad::print(std::ostream &os){
+void Quad::print(std::ostream &cout){
 	
 	unsigned n=-1;
 	if(n!=label){
@@ -90,7 +90,13 @@ void Quad::print(std::ostream &os){
 		case CALL:
 			cout<<"call "<< result->toStr();
 			break;
+		case RETURN:
+			cout<<"return";
+			if(arg1!=NULL){
+				cout<<arg1->toStr();
+			}
+			break;
 	}
-	if(comment.size()>0)cout<<" #"<<comment;
+	if(comment.size()>0)cout<<"\t#"<<comment;
 	cout<<endl;
 }
