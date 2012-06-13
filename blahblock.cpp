@@ -1,9 +1,12 @@
 #include "blahblock.h"
+#include <sstream>
 
 using namespace std;
 void IBlock::addinst(Inst* i){
 	
-	i->label=nextinstr++;
+	stringstream lab;
+	lab << nextinstr++;
+	i->labels.push_back(lab.str());
 	instructions.push_back(i);
 
 };

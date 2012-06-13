@@ -145,7 +145,9 @@ fun_firm	: type ID fun_decl_args		{$$=new NFunctionDeclaration($1,*$2,*$3);
 											for(int i=0;i<$3->size();i++){
 												argtypes.push_back(&((*$3)[i]->var->type));
 											}
-										table.insert(new TFunc(*$2,*$1,argtypes));}
+										TFunc* t = new TFunc(*$2,*$1,argtypes);
+										$$->func=t;
+										table.insert(t);}
 			;
 
 fun_decl_args	: fun_scope ')'				{$$ = new VariableList();}

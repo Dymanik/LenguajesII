@@ -2,6 +2,7 @@
 #define BLAHINST
 #include <list>
 #include "blahsymtable.h"
+#include <sstream>
 #include <iostream>
 
 
@@ -15,21 +16,24 @@ struct Operand{
 		char character;
 		bool boolean;
 		float floating;
-		int label;
+		std::string* label;
 		TVar *var;
 		TFunc *func;
 	} value;
 
+	Operand(int val):type(INT){value.integer = val;};
 	Operand(char val):type(CHAR){value.character=val;}
-	Operand(int val):type(INT){value.integer=val;}
 	Operand(bool val):type(BOOL){value.boolean=val;}
 	Operand(TVar* val):type(VAR){value.var=val;}
 	Operand(TFunc* val):type(FUNC){value.func=val;}
 	Operand(float val):type(FLOAT){value.floating=val;}
+	Operand(std::string s):type(LABEL){value.label = new std::string(s);}
 	Operand(int val,bool lab){
 		if(lab){
+			std::stringstream lab;
+			lab<<val;
 			type=LABEL;
-			value.label = val;
+			value.label = new std::string(lab.str());
 		}else{
 			type=TEMP;
 			value.temp=val;
@@ -43,9 +47,9 @@ struct Operand{
 
 class Inst{
 	public:
-	unsigned label;
+	std::list<std::string> labels;
 	virtual void print(std::ostream&)=0;
-	Inst():label(-1){};
+	Inst(){};
 
 };
 

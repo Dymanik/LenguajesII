@@ -6,7 +6,11 @@ string Operand::toStr(){
 	stringstream os;
 	switch(type){
 		case TEMP:
-			os<<"T"<<value.temp;
+			if(value.temp==0){
+				cout<<"Base"<<endl;
+			}else{
+				os<<"T"<<value.temp;
+			}
 			break;
 		case INT:
 			os<<value.integer;
@@ -30,7 +34,7 @@ string Operand::toStr(){
 		case FUNC:
 			os<<"FUNC: "<<value.func->name;
 		case LABEL:
-			os<<"LABEL:"<<value.label;
+			os<<"LABEL:"<<*value.label;
 			break;
 	}
 	return os.str();
@@ -38,10 +42,20 @@ string Operand::toStr(){
 
 void Quad::print(std::ostream &cout){
 	
-	unsigned n=-1;
-	if(n!=label){
-		cout<<label<<":";
+	if(!labels.empty()){
+		string str;
+		while(labels.size()>1){
+			str = labels.front();
+			labels.pop_front();
+			cout<<str<<":"<<endl;
+
+		}
+		str = labels.front();
+		labels.pop_front();
+		cout<<str<<":";
 	}
+	bool undef =false;
+	bool jlabel =false;
 	cout<<"\t";
 	switch(op){
 		case ADD:
@@ -59,7 +73,7 @@ void Quad::print(std::ostream &cout){
 		case MOD:
 			cout<<result->toStr()<<" := "<< arg1->toStr()<<" % "<<arg2->toStr();
 			break;
-		
+
 		case UMINUS:
 			cout<<result->toStr()<<" := -"<< arg1->toStr();
 			break;
@@ -67,35 +81,82 @@ void Quad::print(std::ostream &cout){
 			cout<<result->toStr()<<" := "<< arg1->toStr();
 			break;
 		case GOTO:
-			cout<<"goto "<<result->toStr();
+			cout<<"goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFEQ:
-			cout<<"if "<<arg1->toStr()<<" == "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" == "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFNEQ:
-			cout<<"if "<<arg1->toStr()<<" != "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" != "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFLT:
-			cout<<"if "<<arg1->toStr()<<" < "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" < "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFGT:
-			cout<<"if "<<arg1->toStr()<<" > "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" > "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFLEQ:
-			cout<<"if "<<arg1->toStr()<<" <= "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" <= "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case IFGEQ:
-			cout<<"if "<<arg1->toStr()<<" >= "<< arg2->toStr()<<" goto "<< result->toStr();
+			cout<<"if "<<arg1->toStr()<<" >= "<< arg2->toStr()<<" goto ";
+			if(result){
+				jlabel=true;
+			}else{
+				undef = true;
+			}
 			break;
 		case CALL:
 			cout<<"call "<< result->toStr();
 			break;
 		case RETURN:
-			cout<<"return";
+			cout<<"return ";
 			if(arg1!=NULL){
 				cout<<arg1->toStr();
 			}
 			break;
+		case EPILOGUE:
+			cout<<"epilogue "<<arg1->toStr();
+			break;
+		case PROLOGUE:
+			cout<<"prologue "<<arg1->toStr();
+			break;
+
+	}
+	if(undef){
+		cout<<"undef";
+	}else if(jlabel){
+		cout<<result->toStr();
 	}
 	if(comment.size()>0)cout<<"\t#"<<comment;
 	cout<<endl;

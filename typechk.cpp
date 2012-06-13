@@ -69,6 +69,7 @@ TType* NStructAccess::typeChk(Symtable t, TType* exp){
 		return t.lookupType("error");
 	}
 	var = ((TStructured*)ltype)->access(name);
+	
 	if (var==NULL){
 		
 		log.add(Msg(0,type->name+" doesn't have a field named "+name,2));

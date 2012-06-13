@@ -45,13 +45,15 @@ class NLRExpression : public NExpression{
 class NStatement : public Node {
 	public:
 	std::list<int> nextlist;
-	virtual void codeGen(IBlock* block){};
+	std::list<int> breaklist;
+	virtual void codeGen(IBlock* block)=0;
 };
 
 class NExpressionStatement : public NStatement {
 	public:
 		NExpression* expr;
 		NExpressionStatement(NExpression* expr): expr(expr){}
+		void codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -258,16 +260,16 @@ class NVariableDeclaration : public NStatement {
 
 };
 
-
-
 class NFunctionDeclaration : public NStatement {
 	public:
 		std::string name;
 		TType* type;
 		NBlock *block;
 		VariableList arguments;
+		TFunc* func;
 		NFunctionDeclaration(TType* type,std::string name,VariableList arguments,NBlock* block=NULL):name(name),type(type),block(block),arguments(arguments){} 
 		TType* typeChk(Symtable,TType*t=NULL);
+		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -276,6 +278,7 @@ class NRegisterDeclaration : public NStatement {
 		std::string name;
 		Fields fields;
 		NRegisterDeclaration(std::string name,Fields fields):name(name),fields(fields){}
+		void codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 			
 };
@@ -285,6 +288,7 @@ class NUnionDeclaration : public NStatement {
 		std::string name;
 		Fields fields;
 		NUnionDeclaration(std::string name,Fields fields):name(name),fields(fields){}
+		void codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 			
 };
@@ -305,6 +309,7 @@ class NDoWhile : public NStatement{
 		NBlock* block;
 		NDoWhile(NExpression* cond, NBlock* block):cond(cond),block(block){}
 		TType* typeChk(Symtable,TType*t=NULL);
+		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -316,6 +321,7 @@ class NIf : public NStatement{
 		
 		NIf(NExpression* cond,NStatement* block, NStatement* elseBlock=NULL):cond(cond),block(block),elseBlock(elseBlock){}
 		TType* typeChk(Symtable,TType*t=NULL);
+		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
 
 };
@@ -332,6 +338,7 @@ class NForRange : public NStatement{
 				this->step = new NInteger(1);
 			}
 		}
+		void codeGen(IBlock*);
 		TType* typeChk(Symtable,TType*t=NULL);
 		void print(std::ostream& os,int depth=0);
 };
@@ -352,6 +359,7 @@ class NForVar : public NStatement{
 		NVar* array;
 		NBlock* block;
 		NForVar(TVar* var,NVar* array,NBlock* block):var(var),array(array),block(block){}
+		void codeGen(IBlock*);
 		TType* typeChk(Symtable,TType*t=NULL);
 		void print(std::ostream& os,int depth=0);
 };
