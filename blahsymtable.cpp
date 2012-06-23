@@ -5,11 +5,14 @@
 TArray::TArray(TType* typ, Sizelist sizes):TType("Arrayof"+typ->name,typ->size*length,typ->alignment,false,false,false,true){
 	length = sizes.front();
 	if(sizes.size()==1){
-		type=new TArray(typ,sizes.front());
+		TType("Arrayof"+typ->name,typ->size*length,typ->alignment,false,false,false,true);
+		type=typ;
+		size=typ->size*length;
 	} else{
 		sizes.pop_front();
 		type=new TArray(typ,sizes);
 		name="Arrayof"+type->name;
+		size=type->size*length;
 	}
 }
 
@@ -24,9 +27,6 @@ void TRegister::addField(TVar *typ, std::string name){
 	typ->offset = offset;
 	fields[name]=typ;
 	size=offset+typ->type.size;
-	
-
-
 }
 
 void TUnion::addField(TVar *typ, std::string name){

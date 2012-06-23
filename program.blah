@@ -1,7 +1,8 @@
 
 Integer s is -26887.
 Char d .
-Bool b is true && false || 2<4.
+Bool b is true || false .
+Bool c is false || true .
 Float a is  476387668.6.
 
 Arrayof [10] Char z.
@@ -44,14 +45,22 @@ Integer prueba(){
 
 Integer main(){
 
-//    Bool y = prueba(1,#t).
-//    ASDF a.
+    Bool y = prueba(1,#t).
+    ASD tet.
+
+	FOO foo.
 	Integer a.
 	Integer x.
 	for a from 2 to 10 {
 		x=x.
 	}
 
+	foo-> a -> d = true.
+	z[ 5 ]=#s.
+	tet->c = #a .
+	tet->a = 2 .
+
+	tet->a = tet->a + foo->q .
 	Integer i.
 	Integer j.
 

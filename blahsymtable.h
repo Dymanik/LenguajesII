@@ -183,8 +183,16 @@ class Symtable {
 		TFunc* lookupFunc(const std::string name, const std::vector<TType*> args);
         TType* lookupType(const std::string name);
 
-        int begScope(){
+		int begFuncScope(){
 			offsetStack.push_front(0);
+			scopeStack.push_front(nextscope);
+			nextscope++;
+
+		}
+
+        int begScope(){
+			int  t = offsetStack.front();
+			offsetStack.push_front(t);
 			scopeStack.push_front(nextscope);
 			nextscope++;
 		}

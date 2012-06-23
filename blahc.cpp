@@ -12,8 +12,63 @@ extern NBlock* programAST;
 using namespace std;
 IBlock* iblock;
 
+struct Config{
+	string file;
+	bool printTree;
+	bool printTAC;
+	bool printSym;
+	
+	public:
+		Config():file(""),printTree(false),printTAC(false),printSym(false){}
+};
+
+void printHelp(){
+	
+	cout<<"./blahc [-a] [-s] [-t] file "<<endl;
+
+	cout<<"\t-a\tprints the AST"<<endl;
+	cout<<"\t-s\tprints the symbol table"<<endl;
+	cout<<"\t-t\tprints the TAC generated"<<endl;
+	
+	exit(EXIT_FAILURE);
+}
+
+void parseArgs(int argc ,char **argv, Config &opts){
+
+	if (argc==1) printHelp();
+
+	for (int i=1;i<argc;i++){
+		if(argv[i][0]=='-'){
+			switch(argv[i][1]){
+				case 'a':
+					opts.printTree=true;
+					break;
+				case 's':
+					opts.printSym=true;
+					break;
+				case 't':
+					opts.printTAC=true;
+					break;
+			}
+		} else{
+			if(opts.file!=""){
+				cout<<"Error: more than one file especified"<<endl;
+				exit(EXIT_FAILURE);
+			}
+			opts.file=string(argv[i]);
+		}
+	}
+
+}
+
+
 int main(int argc, char **argv){
 
+	Config opts;
+	parseArgs(argc,argv,opts);
+	
+
+	/*Insercion de tipos basicos*/
 	table.insert(new TBool());
 	table.insert(new TInteger());
 	table.insert(new TFloat());
@@ -22,23 +77,28 @@ int main(int argc, char **argv){
 	table.insert(new TChar());
 	table.insert(new TVoid());
 
-	if(freopen(argv[1],"r",stdin)==NULL){
-		std::cerr<<"Failed to open file"<<std::endl;
-		return -1;	
+	if(freopen(opts.file.c_str(),"r",stdin)==NULL){
+		std::cerr<<"Failed to open "<<opts.file<<std::endl;
+		exit(EXIT_FAILURE);	
 	};
-
 
 	yyparse();
 	if(programAST!=NULL){
 		if(programAST->typeChk(table)->name!="error"){
-			cout<<"===========AST========"<<endl;
-			programAST->print(std::cout);
-			cout<<"=====SymbolTable======"<<endl;
-			table.print(std::cout);
+			if(opts.printTree){
+				cout<<"===========AST========"<<endl;
+				programAST->print(std::cout);
+			}
+			if(opts.printSym){
+				cout<<"=====SymbolTable======"<<endl;
+				table.print(std::cout);
+			}
 			iblock = new IBlock();
-			cout<<"=========TAC=========="<<endl;
 			programAST->codeGen(iblock);
-			iblock->print(std::cout);
+			if(opts.printTAC){
+				cout<<"=========TAC=========="<<endl;
+				iblock->print(std::cout);
+			}
 		}else{
 			std::cout<<"Type Error"<<std::endl;
 		}

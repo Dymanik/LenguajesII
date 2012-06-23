@@ -121,7 +121,7 @@ var_decl	: type ID			{
 								}
 			;
 
-fun_decl	: fun_firm block	{$1->block=$2;}
+fun_decl	: fun_firm block	{$1->block=$2;table.endScope();}
 			;
 
 
@@ -154,7 +154,7 @@ fun_decl_args	: fun_scope ')'				{$$ = new VariableList();}
 				| fun_scope var_decls ')'	{$$=$2;}
 				;
 
-fun_scope	: '('	{table.begScope();}
+fun_scope	: '('	{table.begFuncScope();}
 
 ident		: ID	{TVar* temp = table.lookupVar(*$1);
 					if(temp==NULL){log.add(Msg(0,"Variable "+*$1+"no ha sido declarada",2));
@@ -166,7 +166,7 @@ ident		: ID	{TVar* temp = table.lookupVar(*$1);
 
 type		: TYPEID					{	TType* type = table.lookupType(*$1);
 											if(type!=NULL){
-												$$ = table.lookupType(*$1); 
+												$$ = table.lookupType(*$1);
 											}else{
 												$$ = new TError();
 											}
@@ -175,6 +175,8 @@ type		: TYPEID					{	TType* type = table.lookupType(*$1);
 											TType* type = table.lookupType(*$5);
 											if(type!=NULL){
 												$$ = new TArray(type,*$3); 
+												if ($$->isArr){
+												}
 											}else{
 												$$ = new TError();
 											}
@@ -186,9 +188,9 @@ int_arr		: INT				{$$ = new Sizelist();$$->push_back($1);}
 			| int_arr ',' INT	{$1->push_back($3);}
 			;
 
-expr		: lrexpr		{$$ = $1;}
+expr		: lrexpr		{$$ = new NRExpression($1);}
 			| CHAR			{$$=new NChar($1);}
-			| fun_call
+			| fun_call		{$$=$1; ((NFunctionCall*) $$)->inExpr = true;} 
 			| bool_expr
 			| arit_expr
 			| '(' expr ')'	{$$=$2;}
@@ -220,7 +222,7 @@ comparison	: expr '<' expr	{$$ = new NComparison($1,NComparison::LT,$3);}
 			| expr TEQ expr	{$$ = new NComparison($1,NComparison::EQ,$3);}
 			;
 
-lrexpr		: ident					{$$=$1;}
+lrexpr		: ident 				{$$ = $1;}
 			| lrexpr '[' expr ']'	{$$ = new NArrayAccess($1,$3);}
 			| lrexpr ACCESS ID		{$$ = new NStructAccess($1,*$3);}
 			;

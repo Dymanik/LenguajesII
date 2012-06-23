@@ -28,8 +28,8 @@ class NExpression : public Node {
 	public:
 		TType* type;
 		bool constant;
-		std::list<int> truelist;
-		std::list<int> falselist;
+		std::list<Inst*> truelist;
+		std::list<Inst*> falselist;
 		NExpression(TType* type=new TUndef(),bool constant=true):type(type),constant(constant){}
 		
 		virtual Operand* codeGen(IBlock* block)=0;
@@ -38,14 +38,26 @@ class NExpression : public Node {
 class NLRExpression : public NExpression{
 	public:
 		bool islexpr;
-		int tempvar;
-		NLRExpression(TType* type,bool islexpr=false):NExpression(type),islexpr(islexpr){}
+		bool isAccess;
+		TVar* base;
+		NLRExpression(TType* type,bool isAccess=false,bool islexpr=false):NExpression(type),islexpr(islexpr),isAccess(isAccess){}
+};
+
+class NRExpression: public NExpression{
+	public:
+		NLRExpression* expr;
+		NRExpression(NLRExpression* expr):NExpression(expr->type),expr(expr){}
+
+		Operand* codeGen(IBlock* block);
+		TType* typeChk(Symtable t ,TType* exp=NULL);
+		void print(std::ostream& os,int depth=0);
+
 };
 
 class NStatement : public Node {
 	public:
-	std::list<int> nextlist;
-	std::list<int> breaklist;
+	std::list<Inst*> nextlist;
+	std::list<Inst*> breaklist;
 	virtual void codeGen(IBlock* block)=0;
 };
 
@@ -127,7 +139,7 @@ class NArrayAccess : public NLRExpression{
 	public:
 		NLRExpression *lexpr;
 		NExpression *index;
-		NArrayAccess(NLRExpression *lexpr, NExpression *index):lexpr(lexpr),index(index),NLRExpression(lexpr->type){}
+		NArrayAccess(NLRExpression *lexpr, NExpression *index):lexpr(lexpr),index(index),NLRExpression(lexpr->type,true){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
@@ -139,7 +151,7 @@ class NStructAccess : public NLRExpression{
 		NLRExpression *lexpr;
 		std::string name;
 		TVar* var;
-		NStructAccess(NLRExpression *lexpr,std::string name):lexpr(lexpr),name(name),NLRExpression(NULL){}
+		NStructAccess(NLRExpression *lexpr,std::string name):lexpr(lexpr),name(name),NLRExpression(NULL,true){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
@@ -150,7 +162,8 @@ class NFunctionCall : public NExpression {
 		std::string name;
 		ExpressionList arguments;
 		TFunc* func;
-		NFunctionCall(std::string name, ExpressionList arguments) : name(name), arguments(arguments){}
+		bool inExpr;
+		NFunctionCall(std::string name, ExpressionList arguments) :inExpr(false), name(name), arguments(arguments){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);

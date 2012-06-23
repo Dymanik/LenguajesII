@@ -36,8 +36,12 @@ TType* NArray::typeChk(Symtable t,TType* exp){
 	return type;
 }
 
+TType* NRExpression::typeChk(Symtable t,TType* exp){
+	type = expr->typeChk(t,exp);
+	return type;
+}
+
 TType* NVar::typeChk(Symtable t,TType* exp){
-	type=&(var->type);
 	return type;
 }
 
@@ -54,7 +58,7 @@ TType* NArrayAccess::typeChk(Symtable t,TType* exp){
 		log.add(Msg(0,"Array access of non-array type",2));
 		return t.lookupType("error");
 	}
-	if(ltype->name!="Integer"){
+	if(itype->name!="Integer"){
 		log.add(Msg(0,"Array index must be an integer",2));
 		return t.lookupType("error");
 	}
@@ -304,7 +308,7 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 	if(*ltype==*rtype){
 		return t.lookupType("Void");
 	}else{
-		log.add(Msg(0,"Asignment type doesn't match",2));
+		log.add(Msg(0,"Asignment type doesn't match "+ltype->name+"!="+rtype->name,2));
 		return t.lookupType("error");
 	}
 

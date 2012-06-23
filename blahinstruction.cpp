@@ -7,7 +7,7 @@ string Operand::toStr(){
 	switch(type){
 		case TEMP:
 			if(value.temp==0){
-				cout<<"Base"<<endl;
+				os<<"Base"<<endl;
 			}else{
 				os<<"T"<<value.temp;
 			}
@@ -33,55 +33,62 @@ string Operand::toStr(){
 			break;
 		case FUNC:
 			os<<"FUNC: "<<value.func->name;
+			break;
 		case LABEL:
-			os<<"LABEL:"<<*value.label;
+			os<<"LABEL:"<<value.label->labels.front();
 			break;
 	}
 	return os.str();
 }
 
-void Quad::print(std::ostream &cout){
+void Quad::print(std::ostream &os){
 	
 	if(!labels.empty()){
 		string str;
 		while(labels.size()>1){
 			str = labels.front();
 			labels.pop_front();
-			cout<<str<<":"<<endl;
+			os<<str<<":"<<endl;
 
 		}
 		str = labels.front();
 		labels.pop_front();
-		cout<<str<<":";
+		os<<str<<":";
 	}
 	bool undef =false;
 	bool jlabel =false;
-	cout<<"\t";
+	os<<"\t";
 	switch(op){
 		case ADD:
-			cout<<result->toStr()<<" := "<< arg1->toStr()<<" + "<<arg2->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr()<<" + "<<arg2->toStr();
 			break;
 		case SUB:
-			cout<<result->toStr()<<" := "<< arg1->toStr()<<" - "<<arg2->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr()<<" - "<<arg2->toStr();
 			break;
 		case MUL:
-			cout<<result->toStr()<<" := "<< arg1->toStr()<<" * "<<arg2->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr()<<" * "<<arg2->toStr();
 			break;
 		case DIV:
-			cout<<result->toStr()<<" := "<< arg1->toStr()<<" / "<<arg2->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr()<<" / "<<arg2->toStr();
 			break;
 		case MOD:
-			cout<<result->toStr()<<" := "<< arg1->toStr()<<" % "<<arg2->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr()<<" % "<<arg2->toStr();
 			break;
 
 		case UMINUS:
-			cout<<result->toStr()<<" := -"<< arg1->toStr();
+			os<<result->toStr()<<" := -"<< arg1->toStr();
 			break;
 		case COPY:
-			cout<<result->toStr()<<" := "<< arg1->toStr();
+			os<<result->toStr()<<" := "<< arg1->toStr();
+			break;
+		case LINDEX:
+			os<<result->toStr()<<"["<<arg2->toStr()<<"] = "<<arg1->toStr();
+			break;
+		case RINDEX:
+			os<<result->toStr()<<" = "<<arg1->toStr()<<"["<<arg2->toStr()<<"]";
 			break;
 		case GOTO:
-			cout<<"goto ";
+			os<<"goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -89,7 +96,7 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFEQ:
-			cout<<"if "<<arg1->toStr()<<" == "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" == "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -97,7 +104,7 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFNEQ:
-			cout<<"if "<<arg1->toStr()<<" != "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" != "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -105,7 +112,7 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFLT:
-			cout<<"if "<<arg1->toStr()<<" < "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" < "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -113,7 +120,7 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFGT:
-			cout<<"if "<<arg1->toStr()<<" > "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" > "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -121,7 +128,7 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFLEQ:
-			cout<<"if "<<arg1->toStr()<<" <= "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" <= "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
@@ -129,35 +136,44 @@ void Quad::print(std::ostream &cout){
 			}
 			break;
 		case IFGEQ:
-			cout<<"if "<<arg1->toStr()<<" >= "<< arg2->toStr()<<" goto ";
+			os<<"if "<<arg1->toStr()<<" >= "<< arg2->toStr()<<" goto ";
 			if(result){
 				jlabel=true;
 			}else{
 				undef = true;
 			}
 			break;
+		case PARAM:
+			os<<"param "<<arg1->toStr();
+			break;
+		case RETRIEVE:
+			os<<"retrieve "<<result->toStr();
+			break;
 		case CALL:
-			cout<<"call "<< result->toStr();
+			os<<"call "<< arg1->toStr()<<",",arg2->toStr();
 			break;
 		case RETURN:
-			cout<<"return ";
+			os<<"return ";
 			if(arg1!=NULL){
-				cout<<arg1->toStr();
+				os<<arg1->toStr();
 			}
 			break;
 		case EPILOGUE:
-			cout<<"epilogue "<<arg1->toStr();
+			os<<"epilogue "<<arg1->toStr();
 			break;
 		case PROLOGUE:
-			cout<<"prologue "<<arg1->toStr();
+			os<<"prologue "<<arg1->toStr();
+			break;
+		default:
+			os<<"print no definido";
 			break;
 
 	}
 	if(undef){
-		cout<<"undef";
+		os<<"undef";
 	}else if(jlabel){
-		cout<<result->toStr();
+		os<<result->toStr();
 	}
-	if(comment.size()>0)cout<<"\t#"<<comment;
-	cout<<endl;
+	if(comment.size()>0) os<<"\t#"<<comment;
+	os<<endl;
 }

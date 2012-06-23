@@ -9,7 +9,7 @@ class IBlock{
 		int nextinstr;
 		std::list <Inst*> instructions;
 		IBlock():nextinstr(0){}
-		void backpatch(std::list<int> ,int);
+		void backpatch(std::list<Inst*> ,int);
 		void addinst(Inst* i);
 		void print(std::ostream &os);
 };
