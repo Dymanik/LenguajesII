@@ -30,8 +30,9 @@ class NExpression : public Node {
 		bool constant;
 		std::list<Inst*> truelist;
 		std::list<Inst*> falselist;
-		NExpression(TType* type=new TUndef(),bool constant=true):type(type),constant(constant){}
 		
+		NExpression(TType* type=new TUndef(),bool constant=true):type(type),constant(constant){}
+		virtual NExpression* constantFold(){return this;}
 		virtual Operand* codeGen(IBlock* block)=0;
 };
 
@@ -46,7 +47,8 @@ class NLRExpression : public NExpression{
 class NRExpression: public NExpression{
 	public:
 		NLRExpression* expr;
-		NRExpression(NLRExpression* expr):NExpression(expr->type),expr(expr){}
+		bool constant;
+		NRExpression(NLRExpression* expr,bool constant=false):NExpression(expr->type),expr(expr),constant(constant){}
 
 		Operand* codeGen(IBlock* block);
 		TType* typeChk(Symtable t ,TType* exp=NULL);
@@ -72,10 +74,11 @@ class NExpressionStatement : public NStatement {
 class NInteger : public NExpression {
 	public:
 		int value;
-		NInteger(int value):NExpression(new TInteger()),value(value){}
+		NInteger(int value):NExpression(new TInteger(),true),value(value){}
 		TType* typeChk(Symtable t ,TType* exp=NULL);
 		
 		Operand* codeGen(IBlock* block);
+		NExpression* constantFold(){return this;};
 
 		void print(std::ostream& os,int depth=0);
 };
@@ -83,7 +86,25 @@ class NInteger : public NExpression {
 class NFloat : public NExpression {
 	public:
 		float value;
-		NFloat(float value):NExpression(new TFloat()),value(value){}
+		NFloat(float value):NExpression(new TFloat(),true),value(value){}
+		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
+		void print(std::ostream& os,int depth=0);
+};
+
+class NFloatToInt : public NExpression {
+	public:
+		NExpression* expr;
+		NFloatToInt(NExpression* expr):NExpression(new TInteger(),expr->constant),expr(expr){}
+		TType* typeChk(Symtable,TType* t=NULL);
+		Operand* codeGen(IBlock* block);
+		void print(std::ostream& os,int depth=0);
+};
+
+class NIntToFloat : public NExpression {
+	public:
+		NExpression* expr;
+		NIntToFloat(NExpression* expr):NExpression(new TFloat(),expr->constant),expr(expr){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
@@ -100,7 +121,7 @@ class NString : public NExpression {
 class NChar : public NExpression {
 	public:
 		char value;
-		NChar(char value):NExpression(new TChar()),value(value){}
+		NChar(char value):NExpression(new TChar(),true),value(value){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 
@@ -110,7 +131,7 @@ class NChar : public NExpression {
 class NBool : public NExpression {
 	public:
 		bool value;
-		NBool(bool value): NExpression(new TBool()),value(value){}
+		NBool(bool value): NExpression(new TBool(),true),value(value){}
 		TType* typeChk(Symtable,TType* t=NULL);
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);

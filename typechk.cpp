@@ -19,7 +19,14 @@ TType* NChar::typeChk(Symtable t,TType* exp){
 
 TType* NBool::typeChk(Symtable t,TType* exp){
 	return type;
-;
+}
+
+TType* NFloatToInt::typeChk(Symtable t ,TType* exp){
+	return type;
+}
+
+TType* NIntToFloat::typeChk(Symtable t ,TType* exp){
+	return type;
 }
 
 TType* NArray::typeChk(Symtable t,TType* exp){
@@ -113,9 +120,16 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 	TType* rtype = rexp->typeChk(t,exp);
 
 	if(ltype->isNumeric && rtype->isNumeric){
-		type=ltype;
-		if(rtype->name=="Double"){
-			type=rtype;
+		type = ltype;
+		std::cout<<22<<ltype->name<<rtype->name<<std::endl;
+		if(ltype->name == "Float" || rtype->name == "Float"){
+			if(ltype->name == "Integer"){
+				lexp = new NIntToFloat(lexp);
+			}
+			if(rtype->name == "Integer"){
+				rexp = new NIntToFloat(rexp);
+			}
+			type=lexp->type;
 		}
 		return type;
 	}else{
@@ -128,7 +142,6 @@ TType* NBooleanBinaryOperator::typeChk(Symtable t ,TType* exp){
 	TType* ltype = lexp->typeChk(t,exp);
 	TType* rtype = rexp->typeChk(t,exp);
 
-	
 	if(*ltype==*rtype && ltype->name=="Bool"){
 		type=ltype;
 		return type;
@@ -304,9 +317,15 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 	TType* ltype= var->typeChk(t,exp);
 	TType* rtype=assignment->typeChk(t,exp);
 
-
 	if(*ltype==*rtype){
 		return t.lookupType("Void");
+	}else if(ltype->isNumeric && rtype->isNumeric){
+		if(ltype->name=="Integer" && rtype->name == "Float"){
+			assignment = new NFloatToInt(assignment);
+		}else if(ltype->name=="Float" && rtype->name=="Integer"){
+			std::cout << ltype->name << rtype->name <<std::endl;
+			assignment = new NIntToFloat(assignment);
+		}
 	}else{
 		log.add(Msg(0,"Asignment type doesn't match "+ltype->name+"!="+rtype->name,2));
 		return t.lookupType("error");

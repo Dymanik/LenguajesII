@@ -208,7 +208,7 @@ arit_expr	: INT					{$$ = new NInteger($1);}
 
 bool_expr	: TRUE					{$$ = new NBool(true);}
 			| FALSE					{$$ = new NBool(false);}
-			| expr TAND expr			{$$ = new NBooleanBinaryOperator($1,NBooleanBinaryOperator::AND,$3);}
+			| expr TAND expr		{$$ = new NBooleanBinaryOperator($1,NBooleanBinaryOperator::AND,$3);}
 			| expr TOR expr			{$$ = new NBooleanBinaryOperator($1,NBooleanBinaryOperator::OR,$3);}
 			| '!' expr %prec TNOT	{$$= new NBooleanUnaryOperator(NBooleanUnaryOperator::NOT,$2);}
 			| comparison

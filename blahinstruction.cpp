@@ -78,6 +78,13 @@ void Quad::print(std::ostream &os){
 		case UMINUS:
 			os<<result->toStr()<<" := -"<< arg1->toStr();
 			break;
+		case INT2FLT:
+			os<<result->toStr()<<" := INT2FLT(" << arg1->toStr()<<")";
+			break;
+		case FLT2INT:
+			os<<result->toStr()<<" := FLT2INT(" << arg1->toStr()<<")";
+			break;
+
 		case COPY:
 			os<<result->toStr()<<" := "<< arg1->toStr();
 			break;
