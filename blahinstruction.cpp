@@ -42,18 +42,16 @@ string Operand::toStr(){
 }
 
 void Quad::print(std::ostream &os){
-	
-	if(!labels.empty()){
-		string str;
-		while(labels.size()>1){
-			str = labels.front();
-			labels.pop_front();
-			os<<str<<":"<<endl;
 
+	if(bleader){
+		os<<"l";
+	}
+
+	if(!labels.empty()){
+		list<string>::iterator it;
+		for (it=labels.begin();it!=labels.end();it++){
+			os<<(*it)<<":";
 		}
-		str = labels.front();
-		labels.pop_front();
-		os<<str<<":";
 	}
 	bool undef =false;
 	bool jlabel =false;
@@ -183,4 +181,42 @@ void Quad::print(std::ostream &os){
 	}
 	if(comment.size()>0) os<<"\t#"<<comment;
 	os<<endl;
+}
+
+
+int Quad::isJump(){
+	switch(op){
+		case GOTO:
+			return 1;
+		case IFLEQ:
+		case IFGT:
+		case IFEQ:
+		case IFNEQ:
+		case IFLT:
+		case IFGEQ:
+			return 2;
+		default:
+			return 0;
+	}
+}
+
+Inst* Quad::getJumpDest(){
+	switch(op){
+		case GOTO:
+		case IFLEQ:
+		case IFGT:
+		case IFEQ:
+		case IFNEQ:
+		case IFLT:
+		case IFGEQ:
+			return result->value.label;
+		default:
+			return NULL;
+	}
+
+}
+
+bool Quad::operator==(const Inst &c) const{
+	Quad &b = (Quad&) c;
+	return op == b.op && arg1==b.arg1 && arg2==b.arg2 && result==b.result;
 }

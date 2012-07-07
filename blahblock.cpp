@@ -3,9 +3,10 @@
 
 using namespace std;
 void IBlock::addinst(Inst* i){
-	
+
+	int num = nextinstr++;
 	stringstream lab;
-	lab << nextinstr++;
+	lab << "L" << num;
 	i->labels.push_back(lab.str());
 	instructions.push_back(i);
 
@@ -49,3 +50,38 @@ void IBlock::print(std::ostream &os){
 }
 
 
+
+
+IBlock* IBlock::flowgraph(){
+
+	vector<int> posleaders;
+	vector<Inst*> leaders;
+	list<Inst*>::iterator li;
+	int n=1;
+	bool nextleader=false;
+	for(li=instructions.begin();li!=instructions.end();li++){
+		if(nextleader){
+			(*li)->bleader=true;
+			nextleader=false;
+		}
+		if((*li)->op==Inst::EPILOGUE){
+			(*li)->bleader=true;
+		}
+
+		list<Inst*>::iterator ri;
+		switch((*li)->isJump()){
+			case 2:
+				nextleader=true;
+			case 1:
+				(*li)->getJumpDest()->bleader=true;
+				break;
+			default:
+				break;
+		}
+	}
+	
+	unordered_map<string,IBlock*> labBlock;
+	vector<IBlock*> blocks;
+
+
+}

@@ -5,13 +5,31 @@
 #include <sstream>
 #include <iostream>
 
+struct Operand;
+
 class Inst{
 	public:
-	std::list<std::string> labels;
-	virtual void print(std::ostream&)=0;
-	Inst(){};
+		enum OP {ADD,SUB,MUL,DIV,MOD,UMINUS,CALL,PARAM,
+			FLT2INT,INT2FLT,
+			LINDEX,RINDEX,RETURN,COPY,GOTO,IFEQ,IFNEQ,IFLT,
+			IFLEQ,IFGT,IFGEQ,PROLOGUE,EPILOGUE,RETRIEVE
+		};
+
+		std::string comment;
+		Operand* result;
+		Operand* arg1;
+		Operand* arg2;
+		OP op;
+		bool bleader;
+		std::list<std::string> labels;
+		virtual void print(std::ostream&)=0;
+		virtual int isJump()=0;
+		virtual Inst* getJumpDest()=0;
+		virtual bool operator==(const Inst& b) const=0;
+		Inst(OP op, Operand* arg1,Operand* arg2,Operand* result,std::string comment=""):bleader(false),comment(comment),result(result),arg1(arg1),arg2(arg2),op(op){};
 
 };
+
 
 struct Operand{
 	enum TYPE{
@@ -49,22 +67,12 @@ struct Operand{
 };
 
 
-
 class Quad:public Inst{
 	public:
-	enum OP {ADD,SUB,MUL,DIV,MOD,UMINUS,CALL,PARAM,
-		FLT2INT,INT2FLT,
-		LINDEX,RINDEX,RETURN,COPY,GOTO,IFEQ,IFNEQ,IFLT,
-		IFLEQ,IFGT,IFGEQ,PROLOGUE,EPILOGUE,RETRIEVE
-	};
-
-	std::string comment;
-	Operand* result;
-	Operand* arg1;
-	Operand* arg2;
-	OP op;
-	Quad(OP op, Operand* arg1,Operand* arg2,Operand* result,std::string comment=""):Inst(),comment(comment),result(result),arg1(arg1),arg2(arg2),op(op){};
-
+	Quad(OP op, Operand* arg1,Operand* arg2,Operand* result,std::string comment=""):Inst(op,arg1,arg2,result,comment){};
+	int isJump();
+	Inst* getJumpDest();
+	bool operator==(const Inst &b) const;
 	void print(std::ostream &os);
 
 };

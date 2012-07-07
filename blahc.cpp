@@ -95,6 +95,7 @@ int main(int argc, char **argv){
 			}
 			iblock = new IBlock();
 			programAST->codeGen(iblock);
+			iblock->flowgraph();
 			if(opts.printTAC){
 				cout<<"=========TAC=========="<<endl;
 				iblock->print(std::cout);

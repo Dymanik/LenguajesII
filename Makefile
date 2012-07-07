@@ -12,7 +12,8 @@ FILES = blahsymtable\
 		printsymtable\
 		genTAC\
 		blahblock\
-		blahinstruction
+		blahinstruction\
+		constantFold
 
 
 blahc: blahc.cpp blahparser.cpp blahlexer.cpp ${FILES:%=%.o}
@@ -40,6 +41,8 @@ typechk.o: 		typechk.cpp 		blahast.h
 blahblock.o:	blahblock.cpp 		blahblock.h
 	g++ $< -c ${CFLAGS}
 printsymtable.o:printsymtable.cpp 	blahsymtable.h
+	g++ $< -c ${CFLAGS}
+constantFold.o:constantFold.cpp		blahast.h
 	g++ $< -c ${CFLAGS}
 
 

@@ -121,8 +121,12 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 
 	if(ltype->isNumeric && rtype->isNumeric){
 		type = ltype;
-		std::cout<<22<<ltype->name<<rtype->name<<std::endl;
 		if(ltype->name == "Float" || rtype->name == "Float"){
+			if(op==MOD){
+				log.add(Msg(0,"%% operands must be integers",3));
+				return t.lookupType("error");
+			}
+
 			if(ltype->name == "Integer"){
 				lexp = new NIntToFloat(lexp);
 			}
@@ -159,7 +163,16 @@ TType* NComparison::typeChk(Symtable t,TType* exp){
 
 
 	if(ltype->isNumeric && rtype->isNumeric){
-		return t.lookupType("Bool");
+		if(ltype->name == "Float" || rtype->name == "Float"){
+			if(ltype->name == "Integer"){
+				lexp = new NIntToFloat(lexp);
+			}
+			if(rtype->name == "Integer"){
+				rexp = new NIntToFloat(rexp);
+			}
+		}
+		type=t.lookupType("Bool");
+		return type;
 	}else{
 		log.add(Msg(0,op+" operands must be numeric in comparison",3));
 		return t.lookupType("error");

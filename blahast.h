@@ -60,6 +60,7 @@ class NStatement : public Node {
 	public:
 	std::list<Inst*> nextlist;
 	std::list<Inst*> breaklist;
+	std::list<Inst*> continuelist;
 	virtual void codeGen(IBlock* block)=0;
 };
 
@@ -97,6 +98,7 @@ class NFloatToInt : public NExpression {
 		NExpression* expr;
 		NFloatToInt(NExpression* expr):NExpression(new TInteger(),expr->constant),expr(expr){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		NExpression* constantFold();
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
@@ -106,6 +108,7 @@ class NIntToFloat : public NExpression {
 		NExpression* expr;
 		NIntToFloat(NExpression* expr):NExpression(new TFloat(),expr->constant),expr(expr){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		NExpression* constantFold();
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
@@ -201,6 +204,7 @@ class NAritmeticBinaryOperator : public NExpression{
 		NExpression *rexp;
 		NAritmeticBinaryOperator(NExpression* lexp,OP op,NExpression* rexp):op(op),lexp(lexp),rexp(rexp){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		NExpression* constantFold();
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 
@@ -216,6 +220,7 @@ class NBooleanBinaryOperator :public NExpression {
 		NExpression *rexp;
 		NBooleanBinaryOperator(NExpression* lexp,OP op,NExpression* rexp):op(op),lexp(lexp),rexp(rexp){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		NExpression* constantFold();
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 
@@ -231,6 +236,7 @@ class NComparison : public NExpression {
 		NExpression *rexp;
 		NComparison(NExpression* lexp,OP op,NExpression* rexp):op(op),lexp(lexp),rexp(rexp){}
 		TType* typeChk(Symtable,TType* t=NULL);
+		NExpression* constantFold();
 		Operand* codeGen(IBlock* block);
 		void print(std::ostream& os,int depth=0);
 };
@@ -245,6 +251,7 @@ class NAritmeticUnaryOperator : public NExpression {
 		NAritmeticUnaryOperator(OP op,NExpression* rexp):op(op),rexp(rexp){}
 		TType* typeChk(Symtable,TType*t=NULL);
 		Operand* codeGen(IBlock* block);
+		NExpression* constantFold();
 		void print(std::ostream& os,int depth=0);
 		
 };
@@ -259,6 +266,7 @@ class NBooleanUnaryOperator : public NExpression {
 		NBooleanUnaryOperator(OP op,NExpression* rexp):op(op),rexp(rexp){}
 		TType* typeChk(Symtable,TType*t=NULL);
 		Operand* codeGen(IBlock* block);
+		NExpression* constantFold();
 		void print(std::ostream& os,int depth=0);
 		
 };
