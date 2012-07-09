@@ -32,10 +32,10 @@ string Operand::toStr(){
 			os<<value.var->name;
 			break;
 		case FUNC:
-			os<<"FUNC: "<<value.func->name;
+			os<<value.func->toStr();
 			break;
 		case LABEL:
-			os<<"LABEL:"<<value.label->labels.front();
+			os<<value.label->labels.front();
 			break;
 	}
 	return os.str();
@@ -49,8 +49,12 @@ void Quad::print(std::ostream &os){
 
 	if(!labels.empty()){
 		list<string>::iterator it;
-		for (it=labels.begin();it!=labels.end();it++){
-			os<<(*it)<<":";
+		it=labels.begin();
+		os<<(*it)<<":";
+		it++;
+		while(it!=labels.end()){
+			os<<"\n"<<(*it)<<":";
+			it++;
 		}
 	}
 	bool undef =false;
@@ -169,6 +173,9 @@ void Quad::print(std::ostream &os){
 		case PROLOGUE:
 			os<<"prologue "<<arg1->toStr();
 			break;
+		case EXIT:
+			os<<"EXIT";
+			break;
 		default:
 			os<<"print no definido";
 			break;
@@ -184,7 +191,7 @@ void Quad::print(std::ostream &os){
 }
 
 
-int Quad::isJump(){
+int Inst::isJump(){
 	switch(op){
 		case GOTO:
 			return 1;
@@ -200,7 +207,7 @@ int Quad::isJump(){
 	}
 }
 
-Inst* Quad::getJumpDest(){
+Inst* Inst::getJumpDest(){
 	switch(op){
 		case GOTO:
 		case IFLEQ:
@@ -216,7 +223,6 @@ Inst* Quad::getJumpDest(){
 
 }
 
-bool Quad::operator==(const Inst &c) const{
-	Quad &b = (Quad&) c;
+bool Inst::operator==(const Inst &b) const{
 	return op == b.op && arg1==b.arg1 && arg2==b.arg2 && result==b.result;
 }

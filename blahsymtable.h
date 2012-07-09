@@ -55,7 +55,6 @@ class TType: public TElement {
         bool operator==(const TType &t2)const{
             return name == t2.name;
         }
-        
 		bool operator!=(const TType &t2)const{
             return name != t2.name;
         }
@@ -146,10 +145,13 @@ class TArray: public TType{
 //VARS AND FUNCTIONS
 class TVar: public TElement{
 	public:
+		int scope;
 		TType& type;
 		int offset;
-		TVar(std::string name,TType& type):type(type),TElement(name){}
+		bool temporal;
+		TVar(std::string name,TType& type,bool temporal=false):type(type),TElement(name),scope(-1),temporal(temporal){}
 		void print(std::ostream&,int d=0);
+		bool operator==(const TVar &)const;
 };
 
 class TFunc: public TElement{
@@ -157,6 +159,7 @@ class TFunc: public TElement{
 		TType& type;
 		std::vector<TType*> args;
 		TFunc(std::string name, TType& type, std::vector<TType*> args):TElement(name),type(type),args(args){}
+		std::string toStr();
 		void print(std::ostream&,int d=0);
 };
 

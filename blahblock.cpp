@@ -2,12 +2,18 @@
 #include <sstream>
 
 using namespace std;
+
+string newlabel(){
+	static int num;
+	stringstream lab;
+	lab << "L" << num++;
+	return lab.str();
+}
+
 void IBlock::addinst(Inst* i){
 
-	int num = nextinstr++;
-	stringstream lab;
-	lab << "L" << num;
-	i->labels.push_back(lab.str());
+	nextinstr++;
+	i->labels.push_back(newlabel());
 	instructions.push_back(i);
 
 };
@@ -54,11 +60,10 @@ void IBlock::print(std::ostream &os){
 
 IBlock* IBlock::flowgraph(){
 
-	vector<int> posleaders;
 	vector<Inst*> leaders;
 	list<Inst*>::iterator li;
 	int n=1;
-	bool nextleader=false;
+	bool nextleader=true;
 	for(li=instructions.begin();li!=instructions.end();li++){
 		if(nextleader){
 			(*li)->bleader=true;
@@ -68,7 +73,6 @@ IBlock* IBlock::flowgraph(){
 			(*li)->bleader=true;
 		}
 
-		list<Inst*>::iterator ri;
 		switch((*li)->isJump()){
 			case 2:
 				nextleader=true;
@@ -83,5 +87,6 @@ IBlock* IBlock::flowgraph(){
 	unordered_map<string,IBlock*> labBlock;
 	vector<IBlock*> blocks;
 
-
 }
+
+

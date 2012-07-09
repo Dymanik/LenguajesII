@@ -1,5 +1,6 @@
 #include "blahsymtable.h"
 
+
 void Tuple::print(std::ostream& os,int depth)const {
 	os<<std::string(2*depth,' ')<<"("<<id<<","<<scope<<")";
 }
@@ -19,6 +20,14 @@ void TStructured::print(std::ostream& os,int depth){
 
 void TVar::print(std::ostream& os,int depth){
 	os<<std::string(2*depth,' ')<<name<<" type="<<type.name<<" offset="<<offset<<std::endl;
+}
+
+std::string TFunc::toStr(){
+	std::string str= name;
+	for(int i=0; i<args.size(); i++){
+		str += args[i]->name;
+	}
+	return str;
 }
 
 void TFunc::print(std::ostream& os, int depth){

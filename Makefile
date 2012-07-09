@@ -13,15 +13,17 @@ FILES = blahsymtable\
 		genTAC\
 		blahblock\
 		blahinstruction\
-		constantFold
+		constantFold\
+		tac\
+		spim
 
 
 blahc: blahc.cpp blahparser.cpp blahlexer.cpp ${FILES:%=%.o}
 	g++ $^ -o $@ ${CFLAGS} 
 
 dbg:
-	make clean
-	make CFLAGSADD=-ggdb
+	make clean -j+
+	make CFLAGSADD=-ggdb -j+ 
 
 blahparser.cpp: blahparser.y
 	${BISON} -dy -o $@ $^
@@ -32,9 +34,9 @@ blahlexer.cpp: blahlexer.l
 %.o: %.cpp %.h
 	g++ $< -c ${CFLAGS}
 
-printast.o: 	printast.cpp 		blahast.h
+printast.o: printast.cpp blahast.h
 	g++ $< -c ${CFLAGS}
-genTAC.o: 		genTAC.cpp 			blahast.h
+genTAC.o: genTAC.cpp blahast.h
 	g++ $< -c ${CFLAGS}
 typechk.o: 		typechk.cpp 		blahast.h
 	g++ $< -c ${CFLAGS}

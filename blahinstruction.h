@@ -12,7 +12,8 @@ class Inst{
 		enum OP {ADD,SUB,MUL,DIV,MOD,UMINUS,CALL,PARAM,
 			FLT2INT,INT2FLT,
 			LINDEX,RINDEX,RETURN,COPY,GOTO,IFEQ,IFNEQ,IFLT,
-			IFLEQ,IFGT,IFGEQ,PROLOGUE,EPILOGUE,RETRIEVE
+			IFLEQ,IFGT,IFGEQ,PROLOGUE,EPILOGUE,RETRIEVE,
+			EXIT
 		};
 
 		std::string comment;
@@ -23,9 +24,9 @@ class Inst{
 		bool bleader;
 		std::list<std::string> labels;
 		virtual void print(std::ostream&)=0;
-		virtual int isJump()=0;
-		virtual Inst* getJumpDest()=0;
-		virtual bool operator==(const Inst& b) const=0;
+		virtual int isJump();
+		virtual Inst* getJumpDest();
+		virtual bool operator==(const Inst& b) const;
 		Inst(OP op, Operand* arg1,Operand* arg2,Operand* result,std::string comment=""):bleader(false),comment(comment),result(result),arg1(arg1),arg2(arg2),op(op){};
 
 };
@@ -52,15 +53,7 @@ struct Operand{
 	Operand(TFunc* val):type(FUNC){value.func=val;}
 	Operand(float val):type(FLOAT){value.floating=val;}
 	Operand(Inst* i):type(LABEL){value.label=i;}
-	Operand(int val,bool integer=true){
-		if(integer){
-			type=INT;
-			value.integer = val;
-		}else{
-			type=TEMP;
-			value.temp=val;
-		}
-	}
+	Operand(int val):type(INT){value.integer = val;}
 
 	public:
 	std::string toStr();
@@ -70,9 +63,6 @@ struct Operand{
 class Quad:public Inst{
 	public:
 	Quad(OP op, Operand* arg1,Operand* arg2,Operand* result,std::string comment=""):Inst(op,arg1,arg2,result,comment){};
-	int isJump();
-	Inst* getJumpDest();
-	bool operator==(const Inst &b) const;
 	void print(std::ostream &os);
 
 };

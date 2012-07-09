@@ -90,7 +90,7 @@ int offset;
 program		: decls			{programAST=$1;}
 			;
 
-decls		: decl			{$$=new NBlock();$$->statements.push_back($1);}
+decls		: decl			{$$=new NBlock();$$->mainBlock=true;$$->statements.push_back($1);}
 			| decls decl	{$1->statements.push_back($2);}
 			;
 

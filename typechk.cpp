@@ -69,6 +69,7 @@ TType* NArrayAccess::typeChk(Symtable t,TType* exp){
 		log.add(Msg(0,"Array index must be an integer",2));
 		return t.lookupType("error");
 	}
+	index=index->constantFold();
 	type= ((TArray*)ltype)->type;
 	return type;
 }
@@ -86,7 +87,8 @@ TType* NStructAccess::typeChk(Symtable t, TType* exp){
 		log.add(Msg(0,type->name+" doesn't have a field named "+name,2));
 		return t.lookupType("error");
 	}
-	return &var->type;
+	type = &var->type;
+	return type;
 	
 }
 
@@ -99,6 +101,7 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 		if(temp->name=="error"){
 			ok=ok&&false;
 		}else{
+			arguments[i]=arguments[i]->constantFold();
 			argTypes.push_back(temp);
 		}
 	}
@@ -243,6 +246,7 @@ TType* NWhileDo::typeChk(Symtable t,TType* exp){
 		return t.lookupType("error");
 	}
 
+	cond=cond->constantFold();
 	return t.lookupType("Void");
 }
 
@@ -257,7 +261,7 @@ TType* NDoWhile::typeChk(Symtable t,TType* exp){
 		log.add(Msg(0,"While condition must be a boolean expression",3));
 		return t.lookupType("error");
 	}
-
+	cond=cond->constantFold();
 	return t.lookupType("Void");
 }
 
@@ -276,7 +280,8 @@ TType* NIf::typeChk(Symtable t, TType* exp){
 		log.add(Msg(0,"If condition must be a boolean expression",3));
 		return t.lookupType("error");
 	}
-	
+
+	cond=cond->constantFold();
 	return t.lookupType("Void");
 
 }
@@ -299,6 +304,9 @@ TType* NForRange::typeChk(Symtable t, TType* exp){
 	if (!ok){
 		return t.lookupType("error");
 	}
+	beg=beg->constantFold();
+	end=end->constantFold();
+	step=step->constantFold();
 	return t.lookupType("Void");
 	
 }
@@ -322,6 +330,9 @@ TType* NReturn::typeChk(Symtable t,TType* exp){
 		return t.lookupType("error");
 	}
 
+	if(expr!=NULL){
+		expr=expr->constantFold();
+	}
 	return t.lookupType("Void");
 
 }
@@ -331,6 +342,7 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 	TType* rtype=assignment->typeChk(t,exp);
 
 	if(*ltype==*rtype){
+		assignment=assignment->constantFold();
 		return t.lookupType("Void");
 	}else if(ltype->isNumeric && rtype->isNumeric){
 		if(ltype->name=="Integer" && rtype->name == "Float"){
@@ -339,6 +351,8 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 			std::cout << ltype->name << rtype->name <<std::endl;
 			assignment = new NIntToFloat(assignment);
 		}
+		assignment=assignment->constantFold();
+		return t.lookupType("Void");
 	}else{
 		log.add(Msg(0,"Asignment type doesn't match "+ltype->name+"!="+rtype->name,2));
 		return t.lookupType("error");

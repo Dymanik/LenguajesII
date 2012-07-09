@@ -1,9 +1,12 @@
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <vector>
 #include "blahlog.h"
 #include "blahast.h"
 #include "blahsymtable.h"
+#include "tac.h"
+#include "spim.h"
 
 extern int yyparse();
 extern Log log;
@@ -77,6 +80,9 @@ int main(int argc, char **argv){
 	table.insert(new TChar());
 	table.insert(new TVoid());
 
+	table.insert(new TFunc("print",*table.lookupType("Void"),vector<TType*> (1,table.lookupType("Integer"))));
+	table.insert(new TFunc("print",*table.lookupType("Void"),vector<TType*> (1,table.lookupType("Float"))));
+
 	if(freopen(opts.file.c_str(),"r",stdin)==NULL){
 		std::cerr<<"Failed to open "<<opts.file<<std::endl;
 		exit(EXIT_FAILURE);	
@@ -93,13 +99,21 @@ int main(int argc, char **argv){
 				cout<<"=====SymbolTable======"<<endl;
 				table.print(std::cout);
 			}
-			iblock = new IBlock();
-			programAST->codeGen(iblock);
-			iblock->flowgraph();
+			TAC* tac = new TAC();
+			if(!tac->ASTtoTAC(programAST)){
+				log.print(std::cout);
+				exit(EXIT_FAILURE);	
+			}
 			if(opts.printTAC){
 				cout<<"=========TAC=========="<<endl;
-				iblock->print(std::cout);
+				tac->print(std::cout);
 			}
+		
+			SPIM* spim = new SPIM(tac);
+			ofstream output;
+			output.open("out.s");
+			spim->print(output);
+
 		}else{
 			std::cout<<"Type Error"<<std::endl;
 		}

@@ -68,6 +68,10 @@ TVar* TStructured::access(std::string name){
 }
 
 
+bool TVar::operator==(const TVar &b)const{
+	return scope==b.scope && name==name;
+}
+
 
 /**insert functions,vars and types*/
 void Symtable::insert(TType* t){
@@ -76,22 +80,20 @@ void Symtable::insert(TType* t){
 
 void Symtable::insert(TVar* v){
 	int offset=offsetStack.front();
+	int scope= scopeStack.front();
+	v->scope=scope;
 	offsetStack.pop_front();
 	if(offset % v->type.alignment!=0){
 		offset+= v->type.alignment-(offset%v->type.alignment);
 	}
 	v->offset = offset;
-	vars[Tuple(v->name,scopeStack.front())]=v;
+	vars[Tuple(v->name,scope)]=v;
 	offset+=v->type.size;
 	offsetStack.push_front(offset);
 }
 
 void Symtable::insert(TFunc* f){
-	std::string key= f->name;
-	for(int i=0; i<f->args.size(); i++){
-		key += f->args[i]->name;
-	}
-	functions[key]=f;
+	functions[f->toStr()]=f;
 }
 
 /** lookups types, vars, and functions*/

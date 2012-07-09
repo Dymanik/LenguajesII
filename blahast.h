@@ -1,8 +1,7 @@
 #ifndef BLAHAST
-#define BlAHAST
+#define BLAHAST
 #include "blahsymtable.h"
 #include "blahlog.h"
-#include "blahinstruction.h"
 #include "blahblock.h"
 #include <iostream>
 #include <list>
@@ -31,7 +30,7 @@ class NExpression : public Node {
 		std::list<Inst*> truelist;
 		std::list<Inst*> falselist;
 		
-		NExpression(TType* type=new TUndef(),bool constant=true):type(type),constant(constant){}
+		NExpression(TType* type=new TUndef(),bool constant=false):type(type),constant(constant){}
 		virtual NExpression* constantFold(){return this;}
 		virtual Operand* codeGen(IBlock* block)=0;
 };
@@ -58,9 +57,13 @@ class NRExpression: public NExpression{
 
 class NStatement : public Node {
 	public:
+	bool fundecl;
+	bool vardecl;
 	std::list<Inst*> nextlist;
 	std::list<Inst*> breaklist;
 	std::list<Inst*> continuelist;
+
+	NStatement():fundecl(false),vardecl(false){};
 	virtual void codeGen(IBlock* block)=0;
 };
 
@@ -271,10 +274,13 @@ class NBooleanUnaryOperator : public NExpression {
 		
 };
 
+
+
 class NBlock : public NStatement{
 	public:
+		bool mainBlock;
 		StatementList statements;
-		NBlock() {}
+		NBlock():mainBlock(false) {}
 		TType* typeChk(Symtable,TType*t=NULL);
 		void codeGen(IBlock* );
 		void print(std::ostream& os,int depth=0);
@@ -295,7 +301,7 @@ class NVariableDeclaration : public NStatement {
 	public:
 		TVar* var;
 		NAssignment *assignment;
-		NVariableDeclaration(TVar* var,NAssignment *assignment=NULL): var(var),assignment(assignment){};
+		NVariableDeclaration(TVar* var,NAssignment *assignment=NULL): var(var),assignment(assignment){vardecl=true;};
 		TType* typeChk(Symtable,TType*t=NULL);
 		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);
@@ -309,7 +315,7 @@ class NFunctionDeclaration : public NStatement {
 		NBlock *block;
 		VariableList arguments;
 		TFunc* func;
-		NFunctionDeclaration(TType* type,std::string name,VariableList arguments,NBlock* block=NULL):name(name),type(type),block(block),arguments(arguments){} 
+		NFunctionDeclaration(TType* type,std::string name,VariableList arguments,NBlock* block=NULL):name(name),type(type),block(block),arguments(arguments){fundecl=true;} 
 		TType* typeChk(Symtable,TType*t=NULL);
 		void codeGen(IBlock*);
 		void print(std::ostream& os,int depth=0);

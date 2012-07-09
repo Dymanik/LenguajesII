@@ -1,42 +1,48 @@
 #include "blahast.h"
+#include "blahlog.h"
+extern Log log;
 
 using namespace std;
-Operand* newtemp(){
+Operand* newtemp(TType* type){
 	static int t=1;
-	return new Operand(t++,false);
+	stringstream st;
+	st<<"T"<<t++<<type->name;
+	return new Operand(new TVar(st.str(),*type,true));
 }
 
 Operand* NRExpression::codeGen(IBlock* block){
 	Operand* i = expr->codeGen(block);
 	if(expr->isAccess){
-		Operand* t = newtemp();
+		Operand* t = newtemp(type);
 		block->addinst(new Quad(Quad::RINDEX,new Operand(expr->base),i, t));
 		if(type->name =="Bool"){
-			Quad* t1= new Quad(Quad::IFEQ,t,new Operand(1),NULL);
+			Quad* t1= new Quad(Quad::IFEQ,t,new Operand(0),NULL);
 			Quad* t2 = new Quad(Quad::GOTO,NULL,NULL,NULL);
-			truelist.push_back(t1);
-			falselist.push_back(t2);
 			block->addinst(t1);
 			block->addinst(t2);
+			truelist.push_back(t2);
+			falselist.push_back(t1);
 			return NULL;
 		} else {
 			return t;
 		}
 	}else{
+		truelist.splice(truelist.begin(),expr->truelist);
+		falselist.splice(falselist.begin(),expr->falselist);
 		return i;
 	}
 }
 
 Operand* NIntToFloat::codeGen(IBlock* block){
 
-	Operand* t = newtemp();
+	Operand* t = newtemp(type);
 	Operand* e = expr->codeGen(block);
 	block->addinst(new Quad(Quad::INT2FLT,e,NULL,t,"convert Int to Float"));
 	return t;
 }
 
 Operand* NFloatToInt::codeGen(IBlock* block){
-	Operand* t = newtemp();
+	Operand* t = newtemp(type);
 	Operand* e = expr->codeGen(block);
 	block->addinst(new Quad(Quad::FLT2INT,e,NULL,t,"convert Float to Int"));
 	return t;
@@ -77,7 +83,7 @@ Operand* NStructAccess::codeGen(IBlock* block){
 	Operand* off = new Operand(var->offset);
 	base = lexpr->base;
 	if(lexpr->isAccess){
-		Operand* temp= newtemp();
+		Operand* temp= newtemp(new TInteger());
 		if(var->offset>0){
 			block->addinst(new Quad(Quad::ADD,l,off,temp,"accumulacion por accesso a structura"));
 			return temp;
@@ -93,11 +99,11 @@ Operand* NStructAccess::codeGen(IBlock* block){
 Operand* NArrayAccess::codeGen(IBlock* block){
 	Operand* l = lexpr->codeGen(block);
 	Operand* i = index->codeGen(block);
-	Operand* temp= newtemp();
+	Operand* temp= newtemp(index->type);
 	base = lexpr->base;
 	block->addinst(new Quad(Quad::MUL,i,new Operand((int)type->size),temp));
 	if(lexpr->isAccess){
-		Operand* res = newtemp();
+		Operand* res = newtemp(index->type);
 		block->addinst(new Quad(Quad::ADD,l,temp,res));
 		return res;
 	}else{
@@ -110,12 +116,12 @@ Operand* NVar::codeGen(IBlock* block){
 	base = var;
 	if(type->name =="Bool" && !islexpr){
 		Operand* l = new Operand(var);
-		Quad* t1=new Quad(Quad::IFEQ,l,new Operand(1),NULL);
+		Quad* t1=new Quad(Quad::IFEQ,l,new Operand(0),NULL);
 		Quad* t2=new Quad(Quad::GOTO,NULL,NULL,NULL);
 		block->addinst(t1);
 		block->addinst(t2);
-		truelist.push_back(t1);
-		falselist.push_back(t2);
+		truelist.push_back(t2);
+		falselist.push_back(t1);
 		return NULL;
 	}else{
 		return new Operand(var);	
@@ -140,7 +146,7 @@ void NVariableDeclaration::codeGen(IBlock* block){
 void NFunctionDeclaration::codeGen(IBlock* blok){
 
 	Quad* epi = new Quad(Quad::EPILOGUE,new Operand(func),NULL,NULL);
-	epi->labels.push_front(name);
+	epi->labels.push_front("__"+func->toStr());
 	blok->addinst(epi);
 	
 	block->codeGen(blok);
@@ -164,15 +170,15 @@ Operand* NFunctionCall::codeGen(IBlock* block){
 	}
 	block->addinst(new Quad(Quad::CALL,new Operand(func),n,NULL));
 	if(inExpr){
-		Operand* temp = newtemp();
+		Operand* temp = newtemp(type);
 		block->addinst(new Quad(Quad::RETRIEVE,NULL,NULL,temp));
 		if(type->name =="Bool"){
-			Quad* t1=new Quad(Quad::IFEQ,temp,new Operand(1),NULL);
+			Quad* t1=new Quad(Quad::IFEQ,temp,new Operand(0),NULL);
 			Quad* t2=new Quad(Quad::GOTO,NULL,NULL,NULL);
 			block->addinst(t1);
 			block->addinst(t2);
-			truelist.push_back(t1);
-			falselist.push_back(t2);
+			truelist.push_back(t2);
+			falselist.push_back(t1);
 			return NULL;
 		}else{
 			return temp;
@@ -185,7 +191,7 @@ Operand* NAritmeticBinaryOperator::codeGen(IBlock* block){
 	Operand* l=lexp->codeGen(block);
 	Operand* r=rexp->codeGen(block);
 
-	Operand* res = newtemp();
+	Operand* res = newtemp(type);
 	Quad* t;
 	switch(op){
 		case ADD:
@@ -235,7 +241,7 @@ Operand* NAritmeticUnaryOperator::codeGen(IBlock* block){
 
 	Operand* r=rexp->codeGen(block);
 
-	Operand* res = newtemp();
+	Operand* res = newtemp(type);
 	Quad* t;
 	switch(op){
 		case UMINUS:
@@ -293,7 +299,43 @@ Operand* NBooleanUnaryOperator::codeGen(IBlock* block){
 
 
 void NBlock::codeGen(IBlock * block){
+	if(mainBlock){
+		vector<NFunctionDeclaration*> functs;
+		TFunc* main=NULL;
+		for(int i=0;i<statements.size();i++){
+			if(statements[i]->fundecl){
+				NFunctionDeclaration* t = (NFunctionDeclaration*) statements[i];
+				if(t->name=="main"){
+					if(main==NULL){
+						main=t->func;
+					}else{
+						block=NULL;
+						log.add(Msg(0,"There must be only one main",3));
+						return;
+					}
+				}
+				functs.push_back((NFunctionDeclaration*)statements[i]);
+			}else{
+				statements[i]->codeGen(block);
+			}
+		}
+		if(main==NULL){
+			block=NULL;
+			log.add(Msg(0,"There must be a main",3));
+			return;
+		}
 
+		block->addinst(new Quad(Quad::CALL,new Operand(main),new Operand(0),NULL,"start de program"));
+		block->addinst(new Quad(Quad::EXIT,NULL,NULL,NULL,"EXIT"));
+
+		for(int i=0;i<functs.size();i++){
+			functs[i]->codeGen(block);
+		}
+		
+		
+
+
+	}else{
 	for(int i=0;i<statements.size();i++){
 		int t=block->nextinstr;
 		statements[i]->codeGen(block);
@@ -304,6 +346,7 @@ void NBlock::codeGen(IBlock * block){
 		nextlist.splice(nextlist.begin(), statements[i]->nextlist);
 		breaklist.splice(breaklist.begin(), statements[i]->breaklist);
 		continuelist.splice(continuelist.begin(), statements[i]->continuelist);
+	}
 	}
 }
 

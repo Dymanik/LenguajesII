@@ -54,8 +54,12 @@ Integer main(){
 	for a from 2 to 10 {
 		x=x.
 		next.
-		if (a>3) then {
+		if (y) then {
 			stop.
+		}else if (a==3) then{
+			stop.
+		} else {
+			next.
 		}
 		a=a+1.
 	}

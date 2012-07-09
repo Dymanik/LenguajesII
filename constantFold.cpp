@@ -137,15 +137,13 @@ NExpression* NBooleanUnaryOperator::constantFold(){
 NExpression* NComparison::constantFold(){
 
 	lexp = lexp->constantFold();
-	rexp = lexp->constantFold();
+	rexp = rexp->constantFold();
 
 	if(lexp->constant && rexp->constant){
 		if(lexp->type->name == "Float"){
 			float lf,rf;
 			lf = ((NFloat*) lexp)->value;
 			rf = ((NFloat*) rexp)->value;
-			delete lexp;
-			delete rexp;
 			switch(op){
 				case LT:
 					return new NBool(lf<rf);
@@ -164,8 +162,6 @@ NExpression* NComparison::constantFold(){
 			int lf,rf;
 			lf = ((NFloat*) lexp)->value;
 			rf = ((NFloat*) rexp)->value;
-			delete lexp;
-			delete rexp;
 			switch(op){
 				case LT:
 					return new NBool(lf<rf);
