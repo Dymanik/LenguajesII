@@ -1,0 +1,31 @@
+
+register Point{
+	Integer x,
+	Integer y
+}
+
+Void m(Arrayof [10] Point h){
+	h[3]->x=-35.
+	h[3]->y=-35.
+}
+
+Arrayof [10] Integer x.
+
+
+Arrayof [10] Point z.
+
+
+Void main(){
+
+	for s from 0 to 9 {
+		x[s]=s*5.
+		z[s]->x=s.
+		z[s]->y=9-s.
+	}
+	m(z).
+	print(-11).
+	for s from 9 to 0 step -1 {
+		print(z[s]->x).
+		print(z[s]->y).
+	}
+}

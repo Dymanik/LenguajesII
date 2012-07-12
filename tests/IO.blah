@@ -1,0 +1,14 @@
+
+Float m.
+Integer n.
+Void main(){
+
+
+	n=readI().
+	m=readF().
+
+	print(n).
+	print(m).
+	print(2.4).
+
+}

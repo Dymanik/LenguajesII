@@ -1,0 +1,45 @@
+/*
+Integer fibonacci(Integer n){
+	Integer a= 1.
+	Integer b= 0.
+	if (n<0) then {return -1.}
+	if(n==0) then {return 1.}
+	if(n==1) then {return 1.}
+	
+	for x from 0 to n-1 {
+		a=b+a.
+		b=a-b.
+	}
+	return a.
+}
+
+Integer main(){
+
+	print(fibonacci(10)).
+	Integer x =fibonacci(19)+fibonacci(2).
+	print (x).
+	return x.
+
+}
+*/
+
+Void main(){
+
+	Integer n = readI().
+	Integer a= 1.
+	Integer b= 0.
+	if (n<0) then {return .}
+	if(n==0) then {print(1). return .}
+	if(n==1) then {print(1). return .}
+	
+	while(n>0) do {
+		print(a).
+		a=b+a.
+		b=a-b.
+		n=n-1.
+	}
+	print(a).
+
+}
+
+

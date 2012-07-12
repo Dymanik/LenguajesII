@@ -48,6 +48,16 @@ TType* NRExpression::typeChk(Symtable t,TType* exp){
 	return type;
 }
 
+TType* NExpressionStatement::typeChk(Symtable t,TType* exp){
+
+	TType* x = expr->typeChk(t,exp);
+	if(x->name=="error"){
+		return x;
+	}
+	return t.lookupType("Void"); 
+}
+
+
 TType* NVar::typeChk(Symtable t,TType* exp){
 	return type;
 }
@@ -109,12 +119,18 @@ TType* NFunctionCall::typeChk(Symtable t,TType* exp){
 		return t.lookupType("error");
 	}
 	func=t.lookupFunc(name,argTypes);
-	type=&func->type;
 
 	if(func==NULL){
-		log.add(Msg(0,"function "+name+" not defined",2));
+		std::stringstream s;
+		s << "function " <<name<<"( ";
+		for(int i=0;i<argTypes.size();i++){
+			s << argTypes[i]->name<<",";
+		}
+		s << "\b ) not defined";
+		log.add(Msg(0,s.str(),2));
 		return t.lookupType("error");
 	}
+	type=&func->type;
 	return type;
 }
 
@@ -126,7 +142,7 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 		type = ltype;
 		if(ltype->name == "Float" || rtype->name == "Float"){
 			if(op==MOD){
-				log.add(Msg(0,"%% operands must be integers",3));
+				log.add(Msg(0,"%% operands must be integers",2));
 				return t.lookupType("error");
 			}
 
@@ -140,7 +156,7 @@ TType* NAritmeticBinaryOperator::typeChk(Symtable t, TType* exp){
 		}
 		return type;
 	}else{
-		log.add(Msg(0,op+" operands must be numeric",3));
+		log.add(Msg(0,op+" operands must be numeric",2));
 		return t.lookupType("error");
 	}
 }
@@ -153,7 +169,7 @@ TType* NBooleanBinaryOperator::typeChk(Symtable t ,TType* exp){
 		type=ltype;
 		return type;
 	}else{
-		log.add(Msg(0,op+" operands must be boolean",3));
+		log.add(Msg(0,op+" operands must be boolean",2));
 
 		return t.lookupType("error");
 	}
@@ -177,7 +193,7 @@ TType* NComparison::typeChk(Symtable t,TType* exp){
 		type=t.lookupType("Bool");
 		return type;
 	}else{
-		log.add(Msg(0,op+" operands must be numeric in comparison",3));
+		log.add(Msg(0,op+" operands must be numeric in comparison",2));
 		return t.lookupType("error");
 	}
 }
@@ -189,7 +205,7 @@ TType* NAritmeticUnaryOperator::typeChk(Symtable t, TType* exp){
 		type=rtype;
 		return rtype;
 	}else{
-		log.add(Msg(0,op+" operand must be numeric",3));
+		log.add(Msg(0,op+" operand must be numeric",2));
 		return t.lookupType("error");
 	}
 	
@@ -202,7 +218,7 @@ TType* NBooleanUnaryOperator::typeChk(Symtable t, TType* exp){
 		type=rtype;
 		return rtype;
 	}else{
-		log.add(Msg(0,op+" operand must be boolean",3));
+		log.add(Msg(0,op+" operand must be boolean",2));
 		return t.lookupType("error");
 	}
 }
@@ -242,7 +258,7 @@ TType* NWhileDo::typeChk(Symtable t,TType* exp){
 	}
 
 	if(temp->name!="Bool"){
-		log.add(Msg(0,"While condition must be a boolean expression",3));
+		log.add(Msg(0,"While condition must be a boolean expression",2));
 		return t.lookupType("error");
 	}
 
@@ -258,7 +274,7 @@ TType* NDoWhile::typeChk(Symtable t,TType* exp){
 	}
 
 	if(temp->name!="Bool"){
-		log.add(Msg(0,"While condition must be a boolean expression",3));
+		log.add(Msg(0,"While condition must be a boolean expression",2));
 		return t.lookupType("error");
 	}
 	cond=cond->constantFold();
@@ -277,7 +293,7 @@ TType* NIf::typeChk(Symtable t, TType* exp){
 	}
 
 	if(temp->name!="Bool"){
-		log.add(Msg(0,"If condition must be a boolean expression",3));
+		log.add(Msg(0,"If condition must be a boolean expression",2));
 		return t.lookupType("error");
 	}
 
@@ -293,7 +309,7 @@ TType* NForRange::typeChk(Symtable t, TType* exp){
 	TType* Ts = step->typeChk(t,exp);
 	bool ok=true;
 	if(*Tb!= *Te || *Te != *Ts || Ts->name != "Integer"){
-		log.add(Msg(0,"range expressions must be integers",3));
+		log.add(Msg(0,"range expressions must be integers",2));
 		ok=false;
 	}
 
@@ -348,7 +364,6 @@ TType* NAssignment::typeChk(Symtable t, TType* exp){
 		if(ltype->name=="Integer" && rtype->name == "Float"){
 			assignment = new NFloatToInt(assignment);
 		}else if(ltype->name=="Float" && rtype->name=="Integer"){
-			std::cout << ltype->name << rtype->name <<std::endl;
 			assignment = new NIntToFloat(assignment);
 		}
 		assignment=assignment->constantFold();

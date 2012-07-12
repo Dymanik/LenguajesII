@@ -29,6 +29,8 @@ int offset;
 	NArrayAccess *arr_access;
 	NRegisterDeclaration *reg_decl;
 	NUnionDeclaration *union_decl;
+	NForRange* for_range;
+	NForVar* for_var;
     NArray *const_arr;
 	std::vector<NVariableDeclaration*> *varvec;
 	std::vector<NExpression*> *exprvec;
@@ -60,13 +62,15 @@ int offset;
 %type	<expr>	expr fun_call bool_expr arit_expr comparison
 %type 	<lrexpr> lrexpr
 %type	<ident>	ident
-%type	<varvec> fun_decl_args var_decls 
+%type	<varvec> fun_decl_args param_decls 
 %type	<exprvec> fun_call_args expr_lst simple_arr_lst complx_arr_lst
 %type	<block>	program stmts block decls 
 %type 	<fun_decl> fun_firm
 %type   <const_arr> array complx_arr simple_arr
-%type	<var_decl> var_decl varr_decl
+%type	<var_decl> var_decl varr_decl param_decl
 %type	<stmt>	stmt decl fun_decl ctrl_for
+%type	<for_range> for_range
+%type	<for_var>	for_var
 %type	<stmt>	ctrl_while ctrl_if var_asgn reg_decl union_decl
 %type	<type> type
 %type	<sizes> int_arr
@@ -100,6 +104,7 @@ decl		: varr_decl '.' {$$=$1;}
 			| fun_decl
 			;
 
+
 varr_decl	: var_decl
 			;
 
@@ -121,7 +126,7 @@ var_decl	: type ID			{
 								}
 			;
 
-fun_decl	: fun_firm block	{$1->block=$2;table.endScope();}
+fun_decl	: fun_firm block	{$1->block=$2;$1->func->stacksize=table.maxoffset;table.endScope();}
 			;
 
 
@@ -135,8 +140,15 @@ reg_decl	: REGISTER TYPEID beg_block fields end_block	{$$ = new NRegisterDeclara
 fields		: type ID				{$$ = new Fields();$$->push_back(std::make_pair(*$2,new TVar(*$2,*$1)));}
 			| fields ',' type ID	{$1->push_back(std::make_pair(*$4,new TVar(*$4,*$3)));}
 
-var_decls 	: var_decl					{$$=new VariableList();$$->push_back($1);}	
-			| var_decls ',' var_decl	{$1->push_back($3);}
+param_decl	: type ID	{
+							TVar* v = new TVar(*$2,*$1);
+							table.insert(v,true);
+							$$=new NVariableDeclaration(v);
+						}
+			;
+
+param_decls	: param_decl				{$$=new VariableList();$$->push_back($1);}	
+			| param_decls ',' param_decl	{$1->push_back($3);}
 			;
 
 
@@ -151,7 +163,7 @@ fun_firm	: type ID fun_decl_args		{$$=new NFunctionDeclaration($1,*$2,*$3);
 			;
 
 fun_decl_args	: fun_scope ')'				{$$ = new VariableList();}
-				| fun_scope var_decls ')'	{$$=$2;}
+				| fun_scope param_decls ')'	{$$=$2;}
 				;
 
 fun_scope	: '('	{table.begFuncScope();}
@@ -160,7 +172,7 @@ ident		: ID	{TVar* temp = table.lookupVar(*$1);
 					if(temp==NULL){log.add(Msg(0,"Variable "+*$1+"no ha sido declarada",2));
 						$$=NULL;
 					}else{
-					$$=new NVar(temp);
+						$$=new NVar(temp);
 					}
 					}
 
@@ -295,29 +307,32 @@ ctrl_while	: WHILE expr DO block		{$$=new NWhileDo($2,$4);}
 
 for			: FOR {table.begScope();}
 
-ctrl_for	: for ID FROM expr TO expr block			{
-														TVar *v = new TVar(*$2,*(new TInteger()));
-														table.insert(v);
-														$$=new NForRange(v,$4,$6,$7);
-														table.endScope();
-														}
-			| for ID FROM expr TO expr STEP expr block	{
-														TVar *v = new TVar(*$2,*(new TInteger()));
-														table.insert(v);
-														$$=new NForRange(v,$4,$6,$9,$8);
-														table.endScope();
-														}
-			| for ID IN ident block						{
-														if($4->type->isArr){
-															TArray* t = (TArray*)$4->type;
-															TVar *v = new TVar(*$2,*t->type);
-															table.insert(v);
-															$$=new NForVar(v,$4,$5);
-															table.endScope();
-														}else{
-															flagerror=true;
-														}
-														}
+for_range	: ID FROM expr TO expr			{
+												TVar *v = new TVar(*$1,*table.lookupType("Integer"));
+												table.insert(v);
+												$$=new NForRange(v,$3,$5,NULL);
+											}
+			| ID FROM expr TO expr STEP expr {
+												TVar *v = new TVar(*$1,*table.lookupType("Integer"));
+												table.insert(v);
+												$$=new NForRange(v,$3,$5,NULL,$7);
+											}
+			;
+for_var		: ID IN ident 					{
+												if($3->type->isArr){
+													TArray* t = (TArray*)$3->type;
+													TVar *v = new TVar(*$1,*t->type);
+													table.insert(v);
+													$$=new NForVar(v,$3,NULL);
+													table.endScope();
+												}else{
+													flagerror=true;
+												}
+											}
+			;
+
+ctrl_for	: for for_range block	{$$=$2;$2->block=$3;table.endScope();}
+			| for for_var block	{$$=$2;$2->block=$3;table.endScope();}
 			;
 
 

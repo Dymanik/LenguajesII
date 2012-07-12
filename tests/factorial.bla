@@ -1,0 +1,16 @@
+
+
+Integer main(){
+
+	Integer n=10.
+	Integer res=1.
+	Integer x=1. 
+	
+	while (x<n)do{
+		res=res*x.
+		x=x+1.
+	}
+
+	print(res).
+	return res.
+}

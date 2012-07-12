@@ -1,8 +1,8 @@
 
 Void main(){
 	
-	Float a = readI().
-	Float b = readI().
+	Integer a = readF().
+	Integer b = readF().
 
 
 	print(a+b).

@@ -78,18 +78,27 @@ void Symtable::insert(TType* t){
 	types[t->name]=t;
 }
 
-void Symtable::insert(TVar* v){
-	int offset=offsetStack.front();
-	int scope= scopeStack.front();
-	v->scope=scope;
-	offsetStack.pop_front();
-	if(offset % v->type.alignment!=0){
-		offset+= v->type.alignment-(offset%v->type.alignment);
+void Symtable::insert(TVar* v,bool param){
+	if(param){
+		v->scope=scopeStack.front();
+		v->offset = paramoffset;
+		v->isParam = true;
+		vars[Tuple(v->name,scopeStack.front())]=v;
+		paramoffset+=4;
+	}else{
+		int offset=offsetStack.front();
+		int scope= scopeStack.front();
+		v->scope=scope;
+		offsetStack.pop_front();
+		if(offset % v->type.alignment!=0){
+			offset+= v->type.alignment-(offset%v->type.alignment);
+		}
+		v->offset = offset;
+		vars[Tuple(v->name,scope)]=v;
+		offset+=v->type.size;
+		offsetStack.push_front(offset);
+		if(maxoffset<offset) maxoffset=offset;
 	}
-	v->offset = offset;
-	vars[Tuple(v->name,scope)]=v;
-	offset+=v->type.size;
-	offsetStack.push_front(offset);
 }
 
 void Symtable::insert(TFunc* f){

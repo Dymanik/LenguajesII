@@ -62,6 +62,7 @@ class NStatement : public Node {
 	std::list<Inst*> nextlist;
 	std::list<Inst*> breaklist;
 	std::list<Inst*> continuelist;
+	std::list<Inst*> returnlist;
 
 	NStatement():fundecl(false),vardecl(false){};
 	virtual void codeGen(IBlock* block)=0;
@@ -72,6 +73,7 @@ class NExpressionStatement : public NStatement {
 		NExpression* expr;
 		NExpressionStatement(NExpression* expr): expr(expr){}
 		void codeGen(IBlock* block);
+		TType* typeChk(Symtable,TType*);
 		void print(std::ostream& os,int depth=0);
 };
 
@@ -381,7 +383,7 @@ class NForRange : public NStatement{
 		NExpression* end;
 		NExpression* step;
 		NBlock* block;
-		NForRange(TVar* var,NExpression* beg,NExpression* end, NBlock* block, NExpression* step=NULL):var(var),beg(beg),end(end),block(block){
+		NForRange(TVar* var,NExpression* beg,NExpression* end, NBlock* block, NExpression* step=NULL):var(var),beg(beg),end(end),block(block),step(step){
 		if (this->step==NULL){
 				this->step = new NInteger(1);
 			}

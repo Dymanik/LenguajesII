@@ -5,13 +5,6 @@ using namespace std;
 string Operand::toStr(){
 	stringstream os;
 	switch(type){
-		case TEMP:
-			if(value.temp==0){
-				os<<"Base"<<endl;
-			}else{
-				os<<"T"<<value.temp;
-			}
-			break;
 		case INT:
 			os<<value.integer;
 			break;
@@ -26,10 +19,10 @@ string Operand::toStr(){
 			}
 			break;
 		case FLOAT:
-			os<<value.floating;
+			os<<fixed<<value.floating;
 			break;
 		case VAR:
-			os<<value.var->name;
+			os<<value.var->name<<value.var->scope;
 			break;
 		case FUNC:
 			os<<value.func->toStr();
@@ -37,26 +30,31 @@ string Operand::toStr(){
 		case LABEL:
 			os<<value.label->labels.front();
 			break;
+		case REG:
+			os<<value.reg->name;
+			break;
+		default:
+			os<<INT<<BOOL<<CHAR<<FLOAT<<VAR<<FUNC<<LABEL;
+			os<<">"<<type<<"<";
+			os<<"unkown type";
+			break;
 	}
 	return os.str();
 }
 
 void Quad::print(std::ostream &os){
 
-	if(bleader){
-		os<<"l";
-	}
 
-	if(!labels.empty()){
+	if(labels.size()>1){
 		list<string>::iterator it;
 		it=labels.begin();
 		os<<(*it)<<":";
 		it++;
-		while(it!=labels.end()){
+/*		while(it!=labels.end()){
 			os<<"\n"<<(*it)<<":";
 			it++;
 		}
-	}
+*/	}
 	bool undef =false;
 	bool jlabel =false;
 	os<<"\t";
@@ -159,7 +157,7 @@ void Quad::print(std::ostream &os){
 			os<<"retrieve "<<result->toStr();
 			break;
 		case CALL:
-			os<<"call "<< arg1->toStr()<<",",arg2->toStr();
+			os<<"call "<< arg1->toStr()<<","<<arg2->toStr();
 			break;
 		case RETURN:
 			os<<"return ";
@@ -174,7 +172,7 @@ void Quad::print(std::ostream &os){
 			os<<"prologue "<<arg1->toStr();
 			break;
 		case EXIT:
-			os<<"EXIT";
+			os<<"exit";
 			break;
 		default:
 			os<<"print no definido";
@@ -189,6 +187,7 @@ void Quad::print(std::ostream &os){
 	if(comment.size()>0) os<<"\t#"<<comment;
 	os<<endl;
 }
+
 
 
 int Inst::isJump(){

@@ -149,7 +149,10 @@ class TVar: public TElement{
 		TType& type;
 		int offset;
 		bool temporal;
-		TVar(std::string name,TType& type,bool temporal=false):type(type),TElement(name),scope(-1),temporal(temporal){}
+		bool isParam;
+		bool inMem;
+		std::list<int> regs;
+		TVar(std::string name,TType& type,bool isParam=false,bool temporal=false):isParam(isParam),type(type),TElement(name),scope(-1),temporal(temporal),inMem(true){}
 		void print(std::ostream&,int d=0);
 		bool operator==(const TVar &)const;
 };
@@ -157,8 +160,9 @@ class TVar: public TElement{
 class TFunc: public TElement{
 	public:
 		TType& type;
+		int stacksize;
 		std::vector<TType*> args;
-		TFunc(std::string name, TType& type, std::vector<TType*> args):TElement(name),type(type),args(args){}
+		TFunc(std::string name, TType& type, std::vector<TType*> args):stacksize(0),TElement(name),type(type),args(args){}
 		std::string toStr();
 		void print(std::ostream&,int d=0);
 };
@@ -172,14 +176,16 @@ class Symtable {
 		std::list<int> scopeStack;
 		std::list<int> offsetStack;
 		int nextscope;
+		int paramoffset;
 	public:
-		Symtable():nextscope(1){
+		int maxoffset;
+		Symtable():nextscope(1),paramoffset(0),maxoffset(0){
 			scopeStack.push_front(0);
 			offsetStack.push_front(0);
 		}
 		
 		void insert(TType*);
-		void insert(TVar*);
+		void insert(TVar*,bool p =false);
 		void insert(TFunc*);
 		
 		TVar* lookupVar(const std::string name);
@@ -188,6 +194,8 @@ class Symtable {
         TType* lookupType(const std::string name);
 
 		int begFuncScope(){
+			paramoffset=0;
+			maxoffset=0;
 			offsetStack.push_front(0);
 			scopeStack.push_front(nextscope);
 			nextscope++;
