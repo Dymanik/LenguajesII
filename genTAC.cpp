@@ -424,7 +424,6 @@ void NForRange::codeGen(IBlock* blok){
 	Operand* st = step->codeGen(blok);
 	Operand* v = new Operand(var);
 
-	cout<<123<<st->toStr();
 
 	blok->addinst(new Quad(Quad::COPY,b,0,v,"For initialization"));
 	int start = blok->nextinstr;
